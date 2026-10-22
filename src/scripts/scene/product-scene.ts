@@ -638,11 +638,6 @@ function orbitView(view: CameraView, yaw: number, pitch: number): CameraView {
  * ratio, so the pull-back grows as the screen gets narrower.
  */
 const NARROW_FIT = 0.9;
-/**
- * Every view looks at the keyboard from its front left, so its near (left) end reads larger;
- * placing the target a little right of centre balances it on screen.
- */
-const NARROW_FOCUS_X = 0.55;
 
 function narrow(view: CameraView, aspect: number): CameraView {
   const t = view.target;
@@ -654,7 +649,7 @@ function narrow(view: CameraView, aspect: number): CameraView {
       t[1] + (view.position[1] - t[1]) * scale,
       t[2] + (view.position[2] - t[2]) * scale,
     ],
-    focusX: NARROW_FOCUS_X,
+    focusX: view.narrowFocusX,
     focusY: view.narrowFocusY,
   };
 }

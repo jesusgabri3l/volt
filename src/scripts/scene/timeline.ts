@@ -12,7 +12,8 @@ export interface CameraView {
   /** Screen position (0–1, from the left and from the top) where the target should appear. */
   focusX: number;
   focusY: number;
-  /** Vertical screen position of the target on narrow (portrait) screens. */
+  /** Screen position of the target on narrow (portrait) screens. */
+  narrowFocusX: number;
   narrowFocusY: number;
   /** Extra camera pull-back on narrow screens, where the copy leaves less room (1 = none). */
   narrowDistance: number;
@@ -44,23 +45,43 @@ const view = (
   focusY: number,
   narrowFocusY = Math.min(0.78, focusY + 0.2),
   narrowDistance = 1,
-): CameraView => ({ position, target, fov: 30, focusX, focusY, narrowFocusY, narrowDistance });
+  narrowFocusX = NARROW_FOCUS_X,
+): CameraView => ({ position, target, fov: 30, focusX, focusY, narrowFocusX, narrowFocusY, narrowDistance });
+
+/**
+ * Every view looks at the keyboard from its front left, so its near (left) end reads larger;
+ * on narrow screens placing the target a little right of centre balances it. The whole,
+ * assembled keyboard (hero, customization, purchase) needs less of that than the open stack.
+ */
+const NARROW_FOCUS_X = 0.55;
+const NARROW_ASSEMBLED_X = 0.5;
 
 // Hero: the whole keyboard, small and to the right, low three-quarter view.
-const HERO = view([-0.44, 0.19, 0.47], [0, 0.01, 0], 0.68, 0.56);
-// Per component: the camera drifts with the part being described, far enough back to keep
-// the whole opened stack in frame with room around it.
+const HERO = view([-0.44, 0.19, 0.47], [0, 0.01, 0], 0.68, 0.56, undefined, 1, NARROW_ASSEMBLED_X);
+// Per component: the opened stack moves to the left of the copy, and the camera drifts with
+// the part being described, far enough back to keep the whole stack in frame.
 const COMPONENT_VIEWS: Record<(typeof COMPONENTS)[number], CameraView> = {
-  keycaps: view([-0.448, 0.455, 0.56], [0, 0.125, 0], 0.64, 0.5, 0.62),
-  switches: view([-0.459, 0.445, 0.571], [0, 0.12, 0], 0.64, 0.5, 0.62),
-  plate: view([-0.47, 0.434, 0.582], [0, 0.115, 0], 0.64, 0.5, 0.62),
-  pcb: view([-0.482, 0.424, 0.594], [0, 0.11, 0], 0.64, 0.5, 0.62),
-  chassis: view([-0.493, 0.413, 0.605], [0, 0.105, 0], 0.64, 0.5, 0.62),
+  keycaps: view([-0.448, 0.455, 0.56], [0, 0.125, 0], 0.36, 0.5, 0.62),
+  switches: view([-0.459, 0.445, 0.571], [0, 0.12, 0], 0.36, 0.5, 0.62),
+  plate: view([-0.47, 0.434, 0.582], [0, 0.115, 0], 0.36, 0.5, 0.62),
+  pcb: view([-0.482, 0.424, 0.594], [0, 0.11, 0], 0.36, 0.5, 0.62),
+  chassis: view([-0.493, 0.413, 0.605], [0, 0.105, 0], 0.36, 0.5, 0.62),
 };
-// Customization: elevated three-quarter view, centred between the copy and the controls.
-const CUSTOMIZE = view([-0.3, 0.5, 0.64], [0, 0, 0], 0.54, 0.56, 0.41);
+// Customization: elevated three-quarter view on the right of the copy and controls, a little
+// closer than the other views. Narrow screens keep their framing (narrowDistance undoes the
+// closer camera).
+const CUSTOMIZE_CLOSER = 0.84;
+const CUSTOMIZE = view(
+  [-0.3 * CUSTOMIZE_CLOSER, 0.5 * CUSTOMIZE_CLOSER, 0.64 * CUSTOMIZE_CLOSER],
+  [0, 0, 0],
+  0.66,
+  0.54,
+  0.41,
+  1 / CUSTOMIZE_CLOSER,
+  NARROW_ASSEMBLED_X,
+);
 // Purchase: the configured keyboard on the left, the order summary on the right.
-const PURCHASE = view([-0.31, 0.29, 0.52], [0, 0.01, 0], 0.32, 0.52, 0.22, 1.3);
+const PURCHASE = view([-0.31, 0.29, 0.52], [0, 0.01, 0], 0.32, 0.52, 0.22, 1.3, NARROW_ASSEMBLED_X);
 
 /**
  * The experience has eight scroll stops: hero, five components, customization, and the end
@@ -134,6 +155,7 @@ function mixView(a: CameraView, b: CameraView, t: number): CameraView {
     fov: mix(a.fov, b.fov, t),
     focusX: mix(a.focusX, b.focusX, t),
     focusY: mix(a.focusY, b.focusY, t),
+    narrowFocusX: mix(a.narrowFocusX, b.narrowFocusX, t),
     narrowFocusY: mix(a.narrowFocusY, b.narrowFocusY, t),
     narrowDistance: mix(a.narrowDistance, b.narrowDistance, t),
   };

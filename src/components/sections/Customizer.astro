@@ -72,11 +72,13 @@ const groups = [
     pointer-events: none;
   }
 
+  /* Copy and controls in one column on the left; the keyboard on the right (timeline.ts). */
   .customizer__inner {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-10);
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: var(--space-8);
     min-height: 100svh;
     padding-block: calc(var(--navbar-height) + var(--space-6)) var(--space-10);
   }
@@ -191,6 +193,7 @@ const groups = [
       flex-direction: column;
       align-items: stretch;
       justify-content: space-between;
+      gap: var(--space-10);
     }
 
     .customizer__controls {

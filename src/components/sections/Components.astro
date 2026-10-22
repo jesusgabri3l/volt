@@ -104,10 +104,12 @@ const components = [
     overflow: clip;
   }
 
+  /* The copy sits on the right; the opened stack moves to the left (timeline.ts). */
   .components__text {
     position: relative;
     display: grid;
     align-content: center;
+    justify-content: end;
     height: 100%;
   }
 
@@ -230,6 +232,7 @@ const components = [
   @media (max-width: 760px) {
     .components__text {
       align-content: start;
+      justify-content: start;
       padding-top: calc(var(--navbar-height) + var(--space-6));
     }
 
