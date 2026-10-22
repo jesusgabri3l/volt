@@ -131,12 +131,6 @@ const FOCUS_GAP = 0.024;
 const STILL_DELAY = 0.15;
 /** Contrast-adaptive sharpening, 0 (light) to 1 (strong). */
 const SHARPEN = 0.35;
-/**
- * The keyboard never sits perfectly still: it sways a few degrees back and forth, slowly
- * enough to read as alive rather than animated. Fine legends and edges read steadier on a
- * gently moving model than on a frozen frame. Off under reduced motion.
- */
-const SWAY = { amplitude: 0.07, period: 16 };
 const AO_FADE = 0.3;
 const AO_STRENGTH = 1.4;
 
@@ -237,7 +231,6 @@ export async function createProductScene({
   let lastTime = 0;
   /** Seconds since anything last moved; the first frame counts as rested. */
   let rest = Infinity;
-  let swayTime = 0;
   let aoLevel = lowPower ? 0 : 1;
 
   const keys = createKeyPresses(model.getObjectByName("Keycaps")!);
@@ -291,10 +284,7 @@ export async function createProductScene({
     if (width === 0 || height === 0) return;
     const settling = Math.abs(targetProgress - progress) > 1e-4;
     progress = settling ? targetProgress + (progress - targetProgress) * Math.exp(-SCROLL_DAMPING * dt) : targetProgress;
-    const swaying = !reducedMotion.matches;
-    if (swaying) swayTime += dt;
-    const sway = swaying ? SWAY.amplitude * Math.sin((2 * Math.PI * swayTime) / SWAY.period) : 0;
-    const animating = [swaying, settling, orbit.update(dt), keys.update(dt), underglow.update(dt)].some(Boolean);
+    const animating = [settling, orbit.update(dt), keys.update(dt), underglow.update(dt)].some(Boolean);
     rest = animating ? 0 : rest + dt;
     const still = rest >= STILL_DELAY;
     aoLevel = !still || lowPower ? 0 : Math.min(1, aoLevel + dt / AO_FADE);
@@ -303,9 +293,8 @@ export async function createProductScene({
     const state = sceneStateAt(progress);
     const base = width < NARROW_BREAKPOINT ? narrow(state.view, width / height) : state.view;
     // Yaw turns the keyboard; pitch tilts the camera slightly over it.
-    const yaw = orbit.yaw + sway;
-    const turned = pivot.rotation.y !== yaw;
-    pivot.rotation.y = yaw;
+    const turned = pivot.rotation.y !== orbit.yaw;
+    pivot.rotation.y = orbit.yaw;
     const view = orbitView(base, 0, orbit.pitch);
     applyView(camera, view, width, height);
     const explodeKey = `${state.explode}|${state.focus.join()}`;

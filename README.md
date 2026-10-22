@@ -7,7 +7,7 @@ El teclado es una escena 3D en tiempo real que acompaña todo el recorrido. Al h
 ## Qué incluye
 
 - **Narrativa por scroll.** Una sola línea de tiempo, determinista y reversible, mueve la cámara, separa los componentes (keycaps, switches, placa, PCB, chasis), enfoca la pieza descrita y vuelve a armar el teclado. Los saltos entre secciones cortan directo al estado nuevo en lugar de reproducir toda la animación.
-- **Interacción.** El teclado se balancea suavemente todo el tiempo y se gira arrastrándolo, con inercia. Las teclas se hunden al escribir o al hacer clic, y la retroiluminación responde a cada pulsación.
+- **Interacción.** El teclado se gira arrastrándolo, con inercia. Las teclas se hunden al escribir o al hacer clic, y la retroiluminación responde a cada pulsación.
 - **Personalización en tiempo real.** Chasis, keycaps y color de la retroiluminación cambian los materiales del modelo sin recargar la escena. La elección se guarda en `sessionStorage` y sobrevive a una recarga en la misma pestaña.
 - **Responsive.** En móvil la cámara se aleja según la proporción de la pantalla, y la composición y los controles se adaptan. La línea de tiempo se sincroniza con la posición real de cada sección, así que funciona también en pantallas bajas o en horizontal.
 - **Respaldo sin 3D.** Si WebGL no está disponible o el modelo no carga, se muestra un poster estático. Todo el contenido es HTML, así que sigue disponible.
@@ -45,7 +45,7 @@ public/
 
 ## Rendimiento
 
-El render se adapta al movimiento. La oclusión ambiental (GTAO) cuesta cerca de la mitad de un frame en una GPU integrada, así que solo corre con la escena quieta: mientras algo se mueve (scroll, arrastre, teclas) se apaga, y al detenerse vuelve con un fundido suave. Ambos estados dibujan a la misma resolución (nativa, con MSAA 4× y como máximo 1.5× en pantallas muy densas), así que las letras de las teclas tienen el mismo grosor en movimiento y en reposo. El teclado nunca queda congelado: se balancea unos grados, muy despacio, para que letras y bordes finos se lean estables. Con `prefers-reduced-motion` el balanceo se apaga, la escena queda quieta, recupera la oclusión ambiental y deja de dibujar.
+El render se adapta al movimiento. La oclusión ambiental (GTAO) cuesta cerca de la mitad de un frame en una GPU integrada, así que solo corre con la escena quieta: mientras algo se mueve (scroll, arrastre, teclas) se apaga, y al detenerse vuelve con un fundido suave. Ambos estados dibujan a la misma resolución (nativa, con MSAA 4× y como máximo 1.5× en pantallas muy densas), así que las letras de las teclas tienen el mismo grosor en movimiento y en reposo. En reposo no se dibuja nada.
 
 Otras decisiones:
 
