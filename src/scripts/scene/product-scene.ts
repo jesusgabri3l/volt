@@ -30,6 +30,7 @@ import { createUnderglow } from "./underglow";
 import { createOrbitControl } from "./orbit-control";
 import { createSharpenPass } from "./sharpen-pass";
 import { AccumulatePass } from "./accumulate-pass";
+import { withBase } from "../../lib/url";
 import { restingProgress, sceneStateAt, type CameraView } from "./timeline";
 import { CHASSIS, KEYCAPS, LEDS, type Customization } from "../customization";
 
@@ -172,7 +173,7 @@ export async function createProductScene({
   scene.environmentIntensity = ENVIRONMENT_INTENSITY;
 
   const [studio, gltf] = await Promise.all([
-    createStudioLighting(scene, "/assets/studio/studio-env.hdr"),
+    createStudioLighting(scene, withBase("/assets/studio/studio-env.hdr")),
     // The site model is meshopt-compressed (gltf-transform meshopt): about a third of the size.
     new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(modelUrl),
   ]);

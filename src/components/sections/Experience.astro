@@ -1,6 +1,7 @@
 ---
 import { Image } from "astro:assets";
 import ProductScene from "../product/ProductScene.astro";
+import { withBase } from "../../lib/url";
 // Captured from the real-time scene at progress 0 (`__voltScene.capture()` in dev). Shown
 // only when the 3D scene fails, so it is not fetched up front.
 import heroStill from "../../assets/images/hero-poster.webp";
@@ -13,7 +14,7 @@ import heroStill from "../../assets/images/hero-poster.webp";
 <div class="experience" data-experience>
   <div class="experience__stage">
     <ProductScene
-      modelUrl="/assets/models/volt-keyboard.glb"
+      modelUrl={withBase("/assets/models/volt-keyboard.glb")}
       label="Teclado mecánico VOLT sobre un piso de concreto oscuro: chasis de aluminio grafito y teclas negras."
     >
       <Image

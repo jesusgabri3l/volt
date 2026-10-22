@@ -1,5 +1,7 @@
 # VOLT — Precisión en cada detalle
 
+**Demo:** https://jesusgabri3l.github.io/volt/
+
 Landing page interactiva en 3D de **VOLT**, un teclado mecánico conceptual. Es un proyecto de portafolio: el producto es ficticio y no está a la venta.
 
 El teclado es una escena 3D en tiempo real que acompaña todo el recorrido. Al hacer scroll se desarma pieza por pieza, se vuelve a armar y se puede personalizar. Se puede girar arrastrándolo y sus teclas responden al teclado físico y a los clics.
@@ -104,7 +106,7 @@ En desarrollo, `window.__voltScene` expone herramientas de ajuste en la consola:
 - `frameCost(progreso, enReposo)` mide el costo de un frame.
 - `capture()` devuelve el frame actual como imagen; sirve para regenerar el poster (`src/assets/images/hero-poster.webp`) y la imagen para redes (`public/og.jpg`).
 
-Para que la imagen para compartir funcione, el build publicado necesita la URL absoluta del sitio en la variable de entorno `SITE_URL`.
+El sitio se publica en GitHub Pages en cada push a `main` (`.github/workflows/deploy.yml`), bajo la ruta `/volt/`; las rutas de archivos pasan por `withBase` (`src/lib/url.ts`).
 
 ## Autor
 
