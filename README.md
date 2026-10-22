@@ -51,6 +51,7 @@ Otras decisiones:
 
 - three.js y el modelo se cargan después del primer render. El HTML y la tipografía no esperan a la escena.
 - Los shaders se compilan en paralelo (`compileAsync`) y el arranque se divide en tareas cortas.
+- Un último paso de nitidez adaptativa (al estilo de AMD CAS) realza bordes y letras sin halos, igual en movimiento que en reposo, por menos de 1 ms por frame.
 - Sin antialiasing redundante: el canvas no usa MSAA porque el buffer del pipeline ya lo hace. Según cálculo, esto ahorra del orden de cientos de MB de memoria de video a resolución de escritorio, algo importante en GPUs integradas.
 - En móvil y pantallas táctiles nunca se usa oclusión ambiental.
 - Con `prefers-reduced-motion`, cada sección muestra directamente su estado, sin animar la cámara.

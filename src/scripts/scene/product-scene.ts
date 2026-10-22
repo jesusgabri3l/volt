@@ -28,6 +28,7 @@ import { createContactShadow } from "./contact-shadow";
 import { createKeyPresses } from "./key-presses";
 import { createUnderglow } from "./underglow";
 import { createOrbitControl } from "./orbit-control";
+import { createSharpenPass } from "./sharpen-pass";
 import { restingProgress, sceneStateAt, type CameraView } from "./timeline";
 import { CHASSIS, KEYCAPS, LEDS, type Customization } from "../customization";
 
@@ -128,6 +129,8 @@ const FOCUS_GAP = 0.024;
  * use AO.
  */
 const STILL_DELAY = 0.15;
+/** Contrast-adaptive sharpening, 0 (light) to 1 (strong). */
+const SHARPEN = 0.7;
 const AO_FADE = 0.3;
 const AO_STRENGTH = 1.4;
 
@@ -215,6 +218,9 @@ export async function createProductScene({
   ao.blendIntensity = AO_STRENGTH;
   composer.addPass(ao);
   composer.addPass(new OutputPass());
+  // Last, in display space: crisp edges and legends whether the keyboard moves or rests.
+  const sharpen = createSharpenPass(SHARPEN);
+  composer.addPass(sharpen);
 
   let progress = 0; // shown
   let targetProgress = 0;
@@ -322,6 +328,7 @@ export async function createProductScene({
     composer.setPixelRatio(pixelRatio);
     composer.setSize(width, height);
     ao.setSize(width * pixelRatio, height * pixelRatio);
+    sharpen.uniforms.texel.value = [1 / (width * pixelRatio), 1 / (height * pixelRatio)];
     return true;
   };
 
@@ -341,7 +348,7 @@ export async function createProductScene({
     // Lets framing and lighting be tuned live from the browser console during development.
     Object.assign(window, {
       __voltScene: {
-        scene, camera, ao, shadow, renderer, composer, requestDraw, keys,
+        scene, camera, ao, sharpen, shadow, renderer, composer, requestDraw, keys,
         // Renders one frame at `progress` and waits for the GPU; returns milliseconds. `still`
         // renders the resting frame (with AO), otherwise the one used while moving.
         frameCost(value: number, still = false) {
