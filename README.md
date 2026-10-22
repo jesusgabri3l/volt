@@ -45,7 +45,7 @@ public/
 
 ## Rendimiento
 
-El render se adapta al movimiento. Mientras algo se mueve (scroll, arrastre, teclas) se dibuja a resolución nativa con MSAA 4×, sin oclusión ambiental. Cuando la escena queda quieta, se activa la oclusión ambiental (GTAO) y se acumulan 16 frames con desplazamientos de subpíxel (secuencia de Halton) en un promedio: supersampling progresivo que deja nítidas las letras y los bordes vistos en ángulos rasantes, sin costo durante el movimiento. Cualquier cambio de vista, de color o de tamaño reinicia el promedio. Después de esas 16 muestras no se dibuja nada.
+El render se adapta al movimiento. En escritorio se dibuja siempre con supersampling 1.5× y MSAA 4×. Mientras algo se mueve (scroll, arrastre, teclas) no hay oclusión ambiental. Cuando la escena queda quieta, se activa la oclusión ambiental (GTAO) y se acumulan 8 frames con desplazamientos de subpíxel (secuencia de Halton) en un promedio: supersampling progresivo que deja nítidas las letras y los bordes vistos en ángulos rasantes, sin costo durante el movimiento. Cualquier cambio de vista, de color o de tamaño reinicia el promedio. Después de esas muestras no se dibuja nada. Si una GPU débil no sostiene el ritmo en movimiento (frames de más de 28 ms seguidos), el supersampling se desactiva una sola vez.
 
 Otras decisiones:
 
@@ -62,8 +62,8 @@ Tomadas el 2026-10-22 en una laptop con GPU integrada Intel, a 1920×911 en Chro
 
 | | Antes | Ahora |
 |---|---|---|
-| Frame durante el scroll | 36–40 ms (unos 18 FPS) | unos 8–11 ms (p90 de 14 ms), con margen para 60 FPS |
-| Frame en reposo (oclusión ambiental + una muestra acumulada) | 36 ms en cada frame | unos 24 ms, 16 frames al detenerse (unos 0.4 s) y luego nada |
+| Frame durante el scroll (con supersampling 1.5×) | 36–40 ms (unos 18 FPS) | unos 18 ms en el peor caso medido (p90 de 25 ms) |
+| Frame en reposo (oclusión ambiental + una muestra acumulada) | 36 ms en cada frame | unos 44 ms, 8 frames al detenerse (unos 0.35 s) y luego nada |
 | Frame en el perfil móvil (390×844) | — | unos 5 ms |
 | Arranque de la escena: tarea larga máxima | — | 138 ms (221 ms de bloqueo en total) |
 

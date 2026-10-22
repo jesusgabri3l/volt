@@ -137,8 +137,14 @@ const AO_STRENGTH = 1.4;
  * Frames averaged once the scene rests, each with a different sub-pixel camera offset:
  * supersampling that costs nothing while anything moves.
  */
-const REST_SAMPLES = 16;
+const REST_SAMPLES = 8;
 const REST_SAMPLES_LOW_POWER = 6;
+/**
+ * Safety net for weak GPUs: if frames in motion average longer than this (seconds) over a
+ * sustained stretch, supersampling is dropped once, for good, to the screen's own density.
+ */
+const SLOW_FRAME = 0.028;
+const SLOW_FRAME_COUNT = 45;
 
 export async function createProductScene({
   canvas,
@@ -153,8 +159,10 @@ export async function createProductScene({
   renderer.setClearColor(0x000000, 0);
   const lowPower = window.matchMedia("(pointer: coarse)").matches || window.innerWidth < NARROW_BREAKPOINT;
   const dpr = Math.max(window.devicePixelRatio, 1);
-  // Native resolution, capped on very dense screens; the composer's 4× MSAA smooths edges.
-  const pixelRatio = Math.min(dpr, 1.5);
+  // Supersampled 1.5× on desktop (2× at most), so edges stay clean in motion too; touch and
+  // narrow screens are already dense, so they render at the screen's own density, capped.
+  let pixelRatio = lowPower ? Math.min(dpr, 1.5) : Math.min(dpr * 1.5, 2);
+  let slowFrames = 0;
   // Neutral keeps the black keycaps black; AgX lifted them to gray.
   renderer.toneMapping = NeutralToneMapping;
   renderer.toneMappingExposure = EXPOSURE;
@@ -296,6 +304,13 @@ export async function createProductScene({
     progress = settling ? targetProgress + (progress - targetProgress) * Math.exp(-SCROLL_DAMPING * dt) : targetProgress;
     const animating = [settling, orbit.update(dt), keys.update(dt), underglow.update(dt)].some(Boolean);
     rest = animating ? 0 : rest + dt;
+    // Count consecutive slow frames while moving (time between frames, so the GPU counts).
+    slowFrames = animating && dt > SLOW_FRAME ? slowFrames + 1 : animating ? 0 : slowFrames;
+    if (slowFrames >= SLOW_FRAME_COUNT && pixelRatio > Math.min(dpr, 1)) {
+      pixelRatio = Math.min(dpr, 1);
+      slowFrames = 0;
+      setSizes();
+    }
     const still = rest >= STILL_DELAY;
     if (!still) sample = 0;
     // At rest: AO on, and each frame adds one jittered sample until the image is final.
