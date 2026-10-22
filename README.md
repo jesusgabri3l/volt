@@ -40,10 +40,12 @@ src/
       orbit-control.ts   Arrastre con inercia
       key-presses.ts     Teclas que se hunden
     customization.ts     Opciones de color compartidas por los controles y la escena
+    key-sounds.ts        Sonido de teclas (apagado por defecto)
     scroll-progress.ts   Progreso del scroll medido sobre el layout real
 public/
   assets/models/volt-keyboard.glb   Modelo (1.9 MB, meshopt)
   assets/studio/studio-env.hdr      Entorno de iluminación (395 KB)
+  assets/sounds/                    Sonidos de teclas (124 KB, Freesound #638035, CC0)
   og.jpg, favicon.svg
 ```
 

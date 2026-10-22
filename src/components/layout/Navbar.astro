@@ -16,7 +16,26 @@ const links = [
         </li>
       ))}
     </ul>
-    <a class="button button--secondary button--compact" href="#comprar" data-umami-event="comprar" data-umami-event-origen="navbar">Comprar</a>
+    <div class="navbar__actions">
+      {/* Shown by the 3D scene once it can play key sounds; off until the visitor turns it on. */}
+      <button
+        class="navbar__sound"
+        type="button"
+        aria-pressed="false"
+        aria-label="Sonido de teclas"
+        title="Sonido de teclas"
+        data-sound-toggle
+        data-umami-event="sonido"
+        hidden
+      >
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M2.5 6v4h2.5l3.5 3V3L5 6z" />
+          <path class="navbar__sound-wave" d="M10.75 5.75a3.2 3.2 0 0 1 0 4.5M12.6 4a5.7 5.7 0 0 1 0 8" />
+          <path class="navbar__sound-off" d="M10.5 6l3.5 4m0-4l-3.5 4" />
+        </svg>
+      </button>
+      <a class="button button--secondary button--compact" href="#comprar" data-umami-event="comprar" data-umami-event-origen="navbar">Comprar</a>
+    </div>
   </nav>
 </header>
 
@@ -58,6 +77,48 @@ const links = [
     gap: 32px;
     font-size: 12px;
     color: var(--color-text-secondary);
+  }
+
+  .navbar__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .navbar__sound {
+    display: inline-grid;
+    place-items: center;
+    width: var(--button-height);
+    height: var(--button-height);
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition:
+      border-color var(--duration-fast) var(--ease-standard),
+      color var(--duration-fast) var(--ease-standard);
+  }
+
+  .navbar__sound[hidden] {
+    display: none;
+  }
+
+  .navbar__sound:hover,
+  .navbar__sound[aria-pressed="true"] {
+    border-color: var(--color-border-strong);
+    color: var(--color-text-primary);
+  }
+
+  .navbar__sound svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .navbar__sound[aria-pressed="true"] .navbar__sound-off,
+  .navbar__sound[aria-pressed="false"] .navbar__sound-wave {
+    display: none;
   }
 
   .navbar__links a {

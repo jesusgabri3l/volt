@@ -36,6 +36,8 @@ export interface KeyPresses {
   pressCode(code: string): boolean;
   /** The keycap a physical key maps to, if any. */
   capForCode(code: string): Object3D | undefined;
+  /** The physical key a keycap maps to, if any (the Fn key has none). */
+  codeForCap(cap: Object3D): string | undefined;
   releaseCode(code: string): void;
   /** Advances the springs; returns true while any key is still moving. */
   update(dt: number): boolean;
@@ -55,6 +57,7 @@ export function createKeyPresses(keycapsGroup: Object3D): KeyPresses {
   const caps = keycapsGroup.children.filter((c) => c.name.startsWith("Keycap"));
   const states = new Map<Object3D, KeyState>();
   const byCode = new Map<string, KeyState>();
+  const codes = new Map<Object3D, string>();
 
   // The caps' parent is tilted with the plate (typing angle), and the exporter keeps Y as
   // the local up axis, so the plate normal is the parent's local -Y, scaled to metres.
@@ -79,7 +82,9 @@ export function createKeyPresses(keycapsGroup: Object3D): KeyPresses {
     row.sort((a, b) => a.c.x - b.c.x);
     row.forEach((item, i) => {
       const code = LAYOUT[r]?.[i];
-      if (code) byCode.set(code, states.get(item.cap)!);
+      if (!code) return;
+      byCode.set(code, states.get(item.cap)!);
+      codes.set(item.cap, code);
     });
   });
 
@@ -102,6 +107,7 @@ export function createKeyPresses(keycapsGroup: Object3D): KeyPresses {
     },
     releaseCode: (code) => set(byCode.get(code), false),
     capForCode: (code) => byCode.get(code)?.cap,
+    codeForCap: (cap) => codes.get(cap),
     update(dt) {
       let moving = false;
       const steps = Math.ceil(Math.min(dt, 1 / 20) / SUBSTEP);

@@ -46,6 +46,8 @@ export interface ProductSceneOptions {
   modelUrl: string;
   /** Called after every frame with each component's anchor in canvas pixels, for hotspots. */
   onAnchors?: (anchors: Record<string, ScreenAnchor>) => void;
+  /** Called when a keycap goes down, with its `KeyboardEvent.code` when it has one. */
+  onKeyPress?: (code: string | undefined) => void;
 }
 
 export interface ScreenAnchor {
@@ -153,6 +155,7 @@ export async function createProductScene({
   canvas,
   modelUrl,
   onAnchors,
+  onKeyPress,
 }: ProductSceneOptions): Promise<ProductScene> {
   // Transparent: the page's CSS gradient shows through, so the background is the
   // same before, during, and after the scene loads, on every section.
@@ -268,6 +271,7 @@ export async function createProductScene({
       if (!cap) return;
       keys.press(cap);
       underglow.pulse(cap);
+      onKeyPress?.(keys.codeForCap(cap));
       window.setTimeout(() => {
         keys.release(cap);
         requestDraw();
@@ -284,6 +288,7 @@ export async function createProductScene({
     if (keys.pressCode(event.code)) {
       const cap = keys.capForCode(event.code);
       if (cap) underglow.pulse(cap);
+      onKeyPress?.(event.code);
       requestDraw();
     }
   };

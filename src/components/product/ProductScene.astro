@@ -60,6 +60,7 @@ const { modelUrl, label } = Astro.props;
 
 <script>
   import { CUSTOMIZE_EVENT, type Customization } from "../../scripts/customization";
+  import { createKeySounds, type KeySounds } from "../../scripts/key-sounds";
 
   let lastCustomization: Customization | undefined;
   document.addEventListener(CUSTOMIZE_EVENT, (event) => {
@@ -72,6 +73,35 @@ const { modelUrl, label } = Astro.props;
     } catch {
       return false;
     }
+  }
+
+  const SOUND_KEY = "volt:key-sound";
+
+  /** Wires the navbar toggle to the key sounds, remembering the visitor's choice. */
+  function bindSoundToggle(sounds: KeySounds) {
+    const toggle = document.querySelector<HTMLButtonElement>("[data-sound-toggle]");
+    if (!toggle) return;
+    const set = (on: boolean) => {
+      sounds.enabled = on;
+      toggle.setAttribute("aria-pressed", String(on));
+      // Umami reads the attribute at click time: the state the click switches to.
+      toggle.dataset.umamiEventEstado = on ? "off" : "on";
+    };
+    try {
+      set(localStorage.getItem(SOUND_KEY) === "on");
+    } catch {
+      set(false);
+    }
+    toggle.addEventListener("click", (event) => {
+      set(!sounds.enabled);
+      // After a pointer click, drop focus so Space and Enter go to the 3D keyboard instead
+      // of switching the sound back off. Keyboard activation (detail 0) keeps focus.
+      if (event.detail > 0) toggle.blur();
+      try {
+        localStorage.setItem(SOUND_KEY, sounds.enabled ? "on" : "off");
+      } catch {}
+    });
+    toggle.hidden = false;
   }
 
   /** After this long without the scene, the poster stands in until it arrives. */
@@ -89,9 +119,11 @@ const { modelUrl, label } = Astro.props;
     Promise.all([import("../../scripts/scene/product-scene"), import("../../scripts/scroll-progress")])
       .then(async ([{ createProductScene }, { observeNarrativeProgress }]) => {
         const hotspots = document.querySelectorAll<HTMLElement>("[data-hotspot]");
+        const sounds = createKeySounds();
         const scene = await createProductScene({
           canvas,
           modelUrl,
+          onKeyPress: (code) => sounds.play(code),
           // Pin each hotspot to its component's projected anchor.
           onAnchors(anchors) {
             for (const hotspot of hotspots) {
@@ -111,6 +143,7 @@ const { modelUrl, label } = Astro.props;
         // The scroll narrative: progress through the enclosing experience drives the scene.
         const experience = root.closest<HTMLElement>("[data-experience]");
         if (experience) observeNarrativeProgress(experience, (progress) => scene.setProgress(progress));
+        bindSoundToggle(sounds);
         window.clearTimeout(slow);
         root.dataset.state = "ready";
       })
