@@ -132,7 +132,7 @@ const FOCUS_GAP = 0.024;
  */
 const STILL_DELAY = 0.15;
 /** Contrast-adaptive sharpening, 0 (light) to 1 (strong). */
-const SHARPEN = 0.7;
+const SHARPEN = 0.35;
 const AO_STRENGTH = 1.4;
 /**
  * Frames averaged once the scene rests, each with a different sub-pixel camera offset:
@@ -141,11 +141,13 @@ const AO_STRENGTH = 1.4;
 const REST_SAMPLES = 8;
 const REST_SAMPLES_LOW_POWER = 6;
 /**
- * Safety net for weak GPUs: if frames in motion average longer than this (seconds) over a
- * sustained stretch, supersampling is dropped once, for good, to the screen's own density.
+ * Safety net for weak GPUs: if frames in motion stay longer than this (seconds) over a
+ * sustained stretch, supersampling steps down by SLOW_FRAME_STEP, down to the screen's own
+ * density.
  */
 const SLOW_FRAME = 0.028;
 const SLOW_FRAME_COUNT = 45;
+const SLOW_FRAME_STEP = 0.25;
 
 export async function createProductScene({
   canvas,
@@ -160,9 +162,9 @@ export async function createProductScene({
   renderer.setClearColor(0x000000, 0);
   const lowPower = window.matchMedia("(pointer: coarse)").matches || window.innerWidth < NARROW_BREAKPOINT;
   const dpr = Math.max(window.devicePixelRatio, 1);
-  // Supersampled 1.5× on desktop (2× at most), so edges stay clean in motion too; touch and
+  // Supersampled 1.75× on desktop (2× at most), so edges stay clean in motion too; touch and
   // narrow screens are already dense, so they render at the screen's own density, capped.
-  let pixelRatio = lowPower ? Math.min(dpr, 1.5) : Math.min(dpr * 1.5, 2);
+  let pixelRatio = lowPower ? Math.min(dpr, 1.5) : Math.min(dpr * 1.75, 2);
   let slowFrames = 0;
   // Neutral keeps the black keycaps black; AgX lifted them to gray.
   renderer.toneMapping = NeutralToneMapping;
@@ -308,7 +310,7 @@ export async function createProductScene({
     // Count consecutive slow frames while moving (time between frames, so the GPU counts).
     slowFrames = animating && dt > SLOW_FRAME ? slowFrames + 1 : animating ? 0 : slowFrames;
     if (slowFrames >= SLOW_FRAME_COUNT && pixelRatio > Math.min(dpr, 1)) {
-      pixelRatio = Math.min(dpr, 1);
+      pixelRatio = Math.max(Math.min(dpr, 1), pixelRatio - SLOW_FRAME_STEP);
       slowFrames = 0;
       setSizes();
     }
