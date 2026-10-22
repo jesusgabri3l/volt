@@ -29,6 +29,7 @@ import { createKeyPresses } from "./key-presses";
 import { createUnderglow } from "./underglow";
 import { createOrbitControl } from "./orbit-control";
 import { createSharpenPass } from "./sharpen-pass";
+import { AccumulatePass } from "./accumulate-pass";
 import { restingProgress, sceneStateAt, type CameraView } from "./timeline";
 import { CHASSIS, KEYCAPS, LEDS, type Customization } from "../customization";
 
@@ -131,8 +132,13 @@ const FOCUS_GAP = 0.024;
 const STILL_DELAY = 0.15;
 /** Contrast-adaptive sharpening, 0 (light) to 1 (strong). */
 const SHARPEN = 0.35;
-const AO_FADE = 0.3;
 const AO_STRENGTH = 1.4;
+/**
+ * Frames averaged once the scene rests, each with a different sub-pixel camera offset:
+ * supersampling that costs nothing while anything moves.
+ */
+const REST_SAMPLES = 16;
+const REST_SAMPLES_LOW_POWER = 6;
 
 export async function createProductScene({
   canvas,
@@ -217,6 +223,8 @@ export async function createProductScene({
   ao.updateGtaoMaterial({ radius: 0.012, distanceExponent: 1.5, thickness: 0.004, scale: 1 });
   ao.blendIntensity = AO_STRENGTH;
   composer.addPass(ao);
+  const accumulate = new AccumulatePass();
+  composer.addPass(accumulate);
   composer.addPass(new OutputPass());
   // Last, in display space: crisp edges and legends whether the keyboard moves or rests.
   const sharpen = createSharpenPass(SHARPEN);
@@ -231,7 +239,9 @@ export async function createProductScene({
   let lastTime = 0;
   /** Seconds since anything last moved; the first frame counts as rested. */
   let rest = Infinity;
-  let aoLevel = lowPower ? 0 : 1;
+  const restSamples = lowPower ? REST_SAMPLES_LOW_POWER : REST_SAMPLES;
+  /** Next resting frame to accumulate; restSamples once the image is final. */
+  let sample = 0;
 
   const keys = createKeyPresses(model.getObjectByName("Keycaps")!);
   const raycaster = new Raycaster();
@@ -287,16 +297,19 @@ export async function createProductScene({
     const animating = [settling, orbit.update(dt), keys.update(dt), underglow.update(dt)].some(Boolean);
     rest = animating ? 0 : rest + dt;
     const still = rest >= STILL_DELAY;
-    aoLevel = !still || lowPower ? 0 : Math.min(1, aoLevel + dt / AO_FADE);
-    ao.enabled = aoLevel > 0;
-    ao.blendIntensity = AO_STRENGTH * aoLevel;
+    if (!still) sample = 0;
+    // At rest: AO on, and each frame adds one jittered sample until the image is final.
+    ao.enabled = still && !lowPower;
+    accumulate.enabled = still;
+    accumulate.sample = sample;
+    const jitter = still && sample > 0 ? halton(sample) : [0, 0];
     const state = sceneStateAt(progress);
     const base = width < NARROW_BREAKPOINT ? narrow(state.view, width / height) : state.view;
     // Yaw turns the keyboard; pitch tilts the camera slightly over it.
     const turned = pivot.rotation.y !== orbit.yaw;
     pivot.rotation.y = orbit.yaw;
     const view = orbitView(base, 0, orbit.pitch);
-    applyView(camera, view, width, height);
+    applyView(camera, view, width, height, jitter[0] / pixelRatio, jitter[1] / pixelRatio);
     const explodeKey = `${state.explode}|${state.focus.join()}`;
     if (explodeKey !== appliedExplodeKey) {
       applyExplode(explodeGroups, state.explode, state.focus);
@@ -313,7 +326,9 @@ export async function createProductScene({
     // Hotspots appear only once the keyboard is fully apart, not while it is separating.
     if (onAnchors) onAnchors(projectAnchors(anchorNodes, camera, width, height, state.explode > 0.98));
     // Keep drawing while moving, and after it until full quality has faded in.
-    if (animating || !still || (!lowPower && aoLevel < 1)) requestDraw();
+    if (still && sample < restSamples) sample++;
+    // Keep drawing while moving, and after it until the resting image is fully sampled.
+    if (animating || !still || sample < restSamples) requestDraw();
     else lastTime = 0;
   };
   const requestDraw = () => {
@@ -340,7 +355,9 @@ export async function createProductScene({
   await yieldToMain();
   draw();
   const observer = new ResizeObserver(() => {
-    if (setSizes()) requestDraw();
+    if (!setSizes()) return;
+    sample = 0;
+    requestDraw();
   });
   observer.observe(canvas);
 
@@ -348,13 +365,12 @@ export async function createProductScene({
     // Lets framing and lighting be tuned live from the browser console during development.
     Object.assign(window, {
       __voltScene: {
-        scene, camera, ao, sharpen, shadow, renderer, composer, requestDraw, keys,
+        scene, camera, ao, accumulate, sharpen, shadow, renderer, composer, requestDraw, keys,
         // Renders one frame at `progress` and waits for the GPU; returns milliseconds. `still`
-        // renders the resting frame (with AO), otherwise the one used while moving.
+        // renders a resting frame (AO and one accumulated sample), otherwise a moving one.
         frameCost(value: number, still = false) {
           targetProgress = progress = value;
           rest = still ? Infinity : 0;
-          aoLevel = still && !lowPower ? 1 : 0;
           const gl = renderer.getContext();
           const pixel = new Uint8Array(4);
           gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
@@ -377,6 +393,9 @@ export async function createProductScene({
       // Reduced motion: no camera travel; each section shows its held state.
       const value = reducedMotion.matches ? restingProgress(raw) : raw;
       if (value === targetProgress) return;
+      // A new view: the accumulated resting image starts over (a cut or a reduced-motion
+      // step changes the view without anything animating).
+      sample = 0;
       const jumped = Math.abs(value - targetProgress) > JUMP;
       targetProgress = value;
       if (reducedMotion.matches) {
@@ -403,6 +422,8 @@ export async function createProductScene({
       });
     },
     setCustomization(config) {
+      // New colours: the accumulated resting image starts over.
+      sample = 0;
       const chassis = CHASSIS.find((c) => c.id === config.chassis);
       const keycaps = KEYCAPS.find((k) => k.id === config.keycaps);
       const led = LEDS.find((l) => l.id === config.led);
@@ -446,6 +467,7 @@ export async function createProductScene({
       shadow.dispose();
       underglow.dispose();
       studio.dispose();
+      accumulate.dispose();
       composer.dispose();
       model.traverse((object) => {
         if (object instanceof Mesh) object.geometry.dispose();
@@ -453,6 +475,20 @@ export async function createProductScene({
       renderer.dispose();
     },
   };
+}
+
+/**
+ * Sub-pixel offset of sample `index` (1-based), in device pixels within [−0.5, 0.5]: the
+ * Halton (2, 3) sequence, which covers the pixel evenly in any number of samples.
+ */
+function halton(index: number): [number, number] {
+  const radical = (i: number, base: number) => {
+    let result = 0;
+    let fraction = 1 / base;
+    for (let n = i; n > 0; n = Math.floor(n / base), fraction /= base) result += (n % base) * fraction;
+    return result;
+  };
+  return [radical(index, 2) - 0.5, radical(index, 3) - 0.5];
 }
 
 /** Ends the current task, letting the browser handle input and paint before continuing. */
@@ -633,15 +669,16 @@ function placeOnFloor(model: Object3D) {
 
 /**
  * Points the camera at the view target, then shifts the projection so the target lands
- * at (`focusX`, `focusY`) on screen without changing the perspective.
+ * at (`focusX`, `focusY`) on screen without changing the perspective. `jitterX`/`jitterY`
+ * add a sub-pixel offset, in CSS pixels, for accumulated supersampling.
  */
-function applyView(camera: PerspectiveCamera, view: CameraView, width: number, height: number) {
+function applyView(camera: PerspectiveCamera, view: CameraView, width: number, height: number, jitterX = 0, jitterY = 0) {
   camera.fov = view.fov;
   camera.aspect = width / height;
   camera.position.set(...view.position);
   camera.lookAt(...view.target);
-  const shiftX = (0.5 - view.focusX) * width;
-  const shiftY = (0.5 - view.focusY) * height;
+  const shiftX = (0.5 - view.focusX) * width + jitterX;
+  const shiftY = (0.5 - view.focusY) * height + jitterY;
   camera.setViewOffset(width, height, shiftX, shiftY, width, height);
   camera.updateProjectionMatrix();
 }
