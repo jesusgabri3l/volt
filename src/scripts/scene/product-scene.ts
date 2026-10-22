@@ -121,12 +121,11 @@ const FOCUS_SCALE = 0.1;
 const FOCUS_GAP = 0.024;
 
 /**
- * Render quality. Ambient occlusion and supersampling cost about two thirds of a frame on an
- * integrated GPU, so they run only once the scene rests: while anything moves, a light
- * pipeline renders at native resolution without AO; after a short rest the full pipeline
- * takes over and fades the AO in. Each pipeline keeps its own fixed-size targets, because
- * resizing them on the fly stalls for over 100 ms. Touch and narrow screens never use AO
- * and supersample less.
+ * Render quality. Ambient occlusion costs about half a frame on an integrated GPU, so it
+ * runs only once the scene rests: while anything moves the AO pass is off, and after a short
+ * rest it fades back in. Both states render at the same resolution, so the keycap legends
+ * keep the same weight whether the keyboard moves or not. Touch and narrow screens never
+ * use AO.
  */
 const STILL_DELAY = 0.15;
 const AO_FADE = 0.3;
@@ -145,9 +144,8 @@ export async function createProductScene({
   renderer.setClearColor(0x000000, 0);
   const lowPower = window.matchMedia("(pointer: coarse)").matches || window.innerWidth < NARROW_BREAKPOINT;
   const dpr = Math.max(window.devicePixelRatio, 1);
-  // At rest, supersampled: crisp keycap edges and legends.
-  const stillRatio = lowPower ? Math.min(dpr, 1.5) : Math.min(dpr * 1.5, 2);
-  const motionRatio = Math.min(dpr, lowPower ? 1.25 : 1);
+  // Native resolution, capped on very dense screens; the composer's 4× MSAA smooths edges.
+  const pixelRatio = Math.min(dpr, 1.5);
   // Neutral keeps the black keycaps black; AgX lifted them to gray.
   renderer.toneMapping = NeutralToneMapping;
   renderer.toneMappingExposure = EXPOSURE;
@@ -206,12 +204,8 @@ export async function createProductScene({
   // Soft contact shadow under the keyboard, over the page backdrop.
   const shadow = createContactShadow(renderer, scene, { size: 0.7, height: 0.06, blur: 6, opacity: 0.9 });
 
-  // Multisampled HDR targets: the composer's default target has no antialiasing.
-  const target = () => new WebGLRenderTarget(1, 1, { samples: 4, type: HalfFloatType });
-  const motionComposer = new EffectComposer(renderer, target());
-  motionComposer.addPass(new RenderPass(scene, camera));
-  motionComposer.addPass(new OutputPass());
-  const composer = new EffectComposer(renderer, target());
+  // Multisampled HDR target: the composer's default target has no antialiasing.
+  const composer = new EffectComposer(renderer, new WebGLRenderTarget(1, 1, { samples: 4, type: HalfFloatType }));
   // Only the scene render needs multisampling; the AO pass writes to the second target.
   composer.renderTarget2.samples = 0;
   composer.addPass(new RenderPass(scene, camera));
@@ -309,7 +303,7 @@ export async function createProductScene({
     } else if (turned) {
       shadow.update();
     }
-    (still ? composer : motionComposer).render();
+    composer.render();
     // Hotspots appear only once the keyboard is fully apart, not while it is separating.
     if (onAnchors) onAnchors(projectAnchors(anchorNodes, camera, width, height, state.explode > 0.98));
     // Keep drawing while moving, and after it until full quality has faded in.
@@ -323,24 +317,19 @@ export async function createProductScene({
   const setSizes = () => {
     const { clientWidth: width, clientHeight: height } = canvas;
     if (width === 0 || height === 0) return false;
-    renderer.setPixelRatio(stillRatio);
+    renderer.setPixelRatio(pixelRatio);
     renderer.setSize(width, height, false);
-    composer.setPixelRatio(stillRatio);
+    composer.setPixelRatio(pixelRatio);
     composer.setSize(width, height);
-    ao.setSize(width * stillRatio, height * stillRatio);
-    motionComposer.setPixelRatio(motionRatio);
-    motionComposer.setSize(width, height);
+    ao.setSize(width * pixelRatio, height * pixelRatio);
     return true;
   };
 
   // Startup in steps, so the page stays responsive while the scene prepares: the model's
-  // shaders compile in parallel where the browser supports it, and each pipeline's first
-  // render (target allocation, pass shaders) runs in its own task.
+  // shaders compile in parallel where the browser supports it, and the first render (target
+  // allocation, pass shaders) runs in its own task.
   setSizes();
   await renderer.compileAsync(scene, camera);
-  await yieldToMain();
-  // The light pipeline, now rather than on the first scroll.
-  motionComposer.render();
   await yieldToMain();
   draw();
   const observer = new ResizeObserver(() => {
@@ -354,7 +343,7 @@ export async function createProductScene({
       __voltScene: {
         scene, camera, ao, shadow, renderer, composer, requestDraw, keys,
         // Renders one frame at `progress` and waits for the GPU; returns milliseconds. `still`
-        // picks the full-quality pipeline, otherwise the light one used while moving.
+        // renders the resting frame (with AO), otherwise the one used while moving.
         frameCost(value: number, still = false) {
           targetProgress = progress = value;
           rest = still ? Infinity : 0;
@@ -451,7 +440,6 @@ export async function createProductScene({
       underglow.dispose();
       studio.dispose();
       composer.dispose();
-      motionComposer.dispose();
       model.traverse((object) => {
         if (object instanceof Mesh) object.geometry.dispose();
       });

@@ -48,8 +48,6 @@ const view = (
 
 // Hero: the whole keyboard, small and to the right, low three-quarter view.
 const HERO = view([-0.44, 0.19, 0.47], [0, 0.01, 0], 0.68, 0.56);
-// Rising and turning toward a higher three-quarter view that frames the exploded stack.
-const ARRIVE = view([-0.4, 0.36, 0.48], [0, 0.07, 0], 0.65, 0.52);
 // Per component: the camera drifts with the part being described, far enough back to keep
 // the whole opened stack in frame with room around it.
 const COMPONENT_VIEWS: Record<(typeof COMPONENTS)[number], CameraView> = {
@@ -82,8 +80,9 @@ const focusOn = (index: number) => COMPONENTS.map((_, i) => (i === index ? 1 : 0
 
 const KEYFRAMES: Keyframe[] = [
   { at: 0, state: { view: HERO, explode: 0, focus: NO_FOCUS } },
-  { at: 0.03, state: { view: HERO, explode: 0, focus: NO_FOCUS } },
-  { at: 0.1, state: { view: ARRIVE, explode: 0.35, focus: NO_FOCUS } },
+  // One continuous move from the hero to the first component: the camera rises while the
+  // parts separate, eased over the whole stretch (the hero has extra scroll for it).
+  { at: 0.02, state: { view: HERO, explode: 0, focus: NO_FOCUS } },
   ...COMPONENTS.flatMap((name, i) => {
     const at = COMPONENT_AT[i];
     const state = { view: COMPONENT_VIEWS[name], explode: 1, focus: focusOn(i) };

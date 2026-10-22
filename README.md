@@ -8,7 +8,7 @@ El teclado es una escena 3D en tiempo real que acompaña todo el recorrido. Al h
 
 - **Narrativa por scroll.** Una sola línea de tiempo, determinista y reversible, mueve la cámara, separa los componentes (keycaps, switches, placa, PCB, chasis), enfoca la pieza descrita y vuelve a armar el teclado. Los saltos entre secciones cortan directo al estado nuevo en lugar de reproducir toda la animación.
 - **Interacción.** El teclado se gira arrastrándolo, con inercia. Las teclas se hunden al escribir o al hacer clic, y la retroiluminación responde a cada pulsación.
-- **Personalización en tiempo real.** Chasis, keycaps y color de la retroiluminación cambian los materiales del modelo sin recargar la escena.
+- **Personalización en tiempo real.** Chasis, keycaps y color de la retroiluminación cambian los materiales del modelo sin recargar la escena. La elección se guarda en `sessionStorage` y sobrevive a una recarga en la misma pestaña.
 - **Responsive.** En móvil la cámara se aleja según la proporción de la pantalla, y la composición y los controles se adaptan. La línea de tiempo se sincroniza con la posición real de cada sección, así que funciona también en pantallas bajas o en horizontal.
 - **Respaldo sin 3D.** Si WebGL no está disponible o el modelo no carga, se muestra un poster estático. Todo el contenido es HTML, así que sigue disponible.
 
@@ -45,14 +45,14 @@ public/
 
 ## Rendimiento
 
-El render se adapta al movimiento. Mientras algo se mueve (scroll, arrastre, teclas), un pipeline ligero dibuja a resolución nativa y sin oclusión ambiental. Cuando la escena queda quieta, el pipeline completo toma el relevo: supersampling de 1.5× y oclusión ambiental (GTAO), con un fundido suave. Cada pipeline tiene sus buffers de tamaño fijo, porque reasignarlos al vuelo congelaba la página más de 100 ms. En reposo no se dibuja nada.
+El render se adapta al movimiento. La oclusión ambiental (GTAO) cuesta cerca de la mitad de un frame en una GPU integrada, así que solo corre con la escena quieta: mientras algo se mueve (scroll, arrastre, teclas) se apaga, y al detenerse vuelve con un fundido suave. Ambos estados dibujan a la misma resolución (nativa, con MSAA 4× y como máximo 1.5× en pantallas muy densas), así que las letras de las teclas tienen el mismo grosor en movimiento y en reposo. En reposo no se dibuja nada.
 
 Otras decisiones:
 
 - three.js y el modelo se cargan después del primer render. El HTML y la tipografía no esperan a la escena.
 - Los shaders se compilan en paralelo (`compileAsync`) y el arranque se divide en tareas cortas.
-- Sin antialiasing redundante: el canvas no usa MSAA porque los buffers del pipeline ya lo hacen. Según cálculo, esto ahorra del orden de cientos de MB de memoria de video a resolución de escritorio, algo importante en GPUs integradas.
-- En móvil y pantallas táctiles nunca se usa oclusión ambiental y el supersampling es menor.
+- Sin antialiasing redundante: el canvas no usa MSAA porque el buffer del pipeline ya lo hace. Según cálculo, esto ahorra del orden de cientos de MB de memoria de video a resolución de escritorio, algo importante en GPUs integradas.
+- En móvil y pantallas táctiles nunca se usa oclusión ambiental.
 - Con `prefers-reduced-motion`, cada sección muestra directamente su estado, sin animar la cámara.
 
 ### Mediciones
@@ -61,8 +61,8 @@ Tomadas el 2026-10-22 en una laptop con GPU integrada Intel, a 1920×911 en Chro
 
 | | Antes | Ahora |
 |---|---|---|
-| Frame durante el scroll | 36–40 ms (unos 18 FPS) | unos 8 ms (p90 de 10 ms), con margen para 60 FPS |
-| Frame en reposo, calidad completa | 36 ms en cada frame | 29 ms, solo unos 10 frames al detenerse |
+| Frame durante el scroll | 36–40 ms (unos 18 FPS) | unos 8–11 ms (p90 de 14 ms), con margen para 60 FPS |
+| Frame en reposo, con oclusión ambiental | 36 ms en cada frame | unos 27 ms, solo unos 10 frames al detenerse |
 | Frame en el perfil móvil (390×844) | — | unos 5 ms |
 | Arranque de la escena: tarea larga máxima | — | 138 ms (221 ms de bloqueo en total) |
 

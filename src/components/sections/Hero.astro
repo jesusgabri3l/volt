@@ -45,11 +45,14 @@ const highlights = [
 </section>
 
 <style>
+  /* The extra space below is the runway for the first scene transition: the copy scrolls
+     away while the keyboard rises and comes apart, before the first component appears. */
   .hero {
     position: relative;
     display: grid;
     grid-template-rows: 1fr auto;
     min-height: 100svh;
+    margin-bottom: 60svh;
     pointer-events: none;
   }
 

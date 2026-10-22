@@ -209,6 +209,24 @@ const groups = [
 <script>
   import { CHASSIS, KEYCAPS, LEDS, PRESETS, CUSTOMIZE_EVENT, presetFor, type Customization } from "../../scripts/customization";
 
+  // The visitor's choice survives a reload in the same tab. Storage can be unavailable
+  // (private modes, blocked site data), so every access is guarded.
+  const STORAGE_KEY = "volt:customization";
+  const loadSaved = (): Partial<Customization> => {
+    try {
+      return JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? "{}");
+    } catch {
+      return {};
+    }
+  };
+  const save = (config: Customization) => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    } catch {
+      // Not saved; the choice still applies for this visit.
+    }
+  };
+
   const labels: Record<keyof Customization, { id: string; label: string }[]> = { chassis: CHASSIS, keycaps: KEYCAPS, led: LEDS };
 
   for (const root of document.querySelectorAll<HTMLElement>("[data-customizer]")) {
@@ -230,6 +248,7 @@ const groups = [
         input.checked = input.value === preset;
       }
       document.dispatchEvent(new CustomEvent(CUSTOMIZE_EVENT, { detail: config }));
+      save(config);
     };
 
     form.addEventListener("change", (event) => {
@@ -245,6 +264,16 @@ const groups = [
       }
       publish();
     });
-    publish();
+    // Restore a saved choice; unknown values (an option removed since) are ignored.
+    const saved = loadSaved();
+    for (const name of Object.keys(labels) as (keyof Customization)[]) {
+      const value = saved[name];
+      if (typeof value !== "string") continue;
+      const option = form.querySelector<HTMLInputElement>(`input[name="${name}"][value="${CSS.escape(value)}"]`);
+      if (option) option.checked = true;
+    }
+    // Published after the other page scripts have run, so every listener (the scene, the
+    // order summary) receives the initial choice.
+    setTimeout(publish);
   }
 </script>
