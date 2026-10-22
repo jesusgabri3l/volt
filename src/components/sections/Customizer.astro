@@ -1,0 +1,250 @@
+---
+import { CHASSIS, KEYCAPS, LEDS, PRESETS, DEFAULT_CUSTOMIZATION } from "../../scripts/customization";
+
+const groups = [
+  { name: "chassis", title: "Chasis", options: CHASSIS },
+  { name: "keycaps", title: "Keycaps", options: KEYCAPS },
+  { name: "led", title: "Retroiluminación", options: LEDS },
+] as const;
+---
+
+<section class="customizer" id="personalizar" aria-labelledby="customizer-title" data-customizer data-scene-stop>
+  <div class="customizer__inner page-container">
+    <div class="customizer__intro">
+      <p class="eyebrow">Personalizar</p>
+      <h2 class="customizer__title" id="customizer-title">Tu estilo.<br />Tu VOLT.</h2>
+      <p class="customizer__copy">Combina chasis, keycaps y retroiluminación. Los cambios se aplican al modelo en tiempo real.</p>
+    </div>
+
+    <form class="customizer__controls" aria-label="Opciones de personalización">
+      {groups.map((group) => (
+        <fieldset class="customizer__group">
+          <legend>{group.title}</legend>
+          <div class="customizer__swatches">
+            {group.options.map((option) => (
+              <label class="swatch" title={option.label}>
+                <input
+                  class="visually-hidden"
+                  type="radio"
+                  name={group.name}
+                  value={option.id}
+                  checked={DEFAULT_CUSTOMIZATION[group.name] === option.id}
+                />
+                <span class="swatch__color" style={`--swatch: ${option.color}`} aria-hidden="true"></span>
+                <span class="visually-hidden">{option.label}</span>
+              </label>
+            ))}
+          </div>
+          <p class="customizer__selected" data-selected={group.name} aria-live="polite"></p>
+        </fieldset>
+      ))}
+
+      <fieldset class="customizer__group">
+        <legend>Estilo</legend>
+        <div class="customizer__presets">
+          {PRESETS.map((preset, index) => (
+            <label class="preset">
+              <input class="visually-hidden" type="radio" name="preset" value={preset.id} checked={index === 0} />
+              <span>{preset.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</section>
+
+<style>
+  .customizer {
+    min-height: 100svh;
+    pointer-events: none;
+  }
+
+  .customizer__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-10);
+    min-height: 100svh;
+    padding-block: calc(var(--navbar-height) + var(--space-6)) var(--space-10);
+  }
+
+  .customizer__intro {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 320px;
+  }
+
+  .customizer__title {
+    font-size: var(--font-size-section);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-tight);
+  }
+
+  .customizer__copy {
+    color: var(--color-text-secondary);
+  }
+
+  .customizer__controls {
+    display: grid;
+    gap: var(--space-6);
+    width: 240px;
+    pointer-events: auto;
+  }
+
+  .customizer__group {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .customizer__group legend {
+    margin-bottom: var(--space-3);
+    padding: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+  }
+
+  .customizer__swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .swatch {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: border-color var(--duration-fast) var(--ease-standard);
+  }
+
+  .swatch__color {
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--swatch);
+  }
+
+  /* Selection is shown by the ring, not by colour alone. */
+  .swatch:has(input:checked) {
+    border-color: var(--color-text-primary);
+  }
+
+  .swatch:has(input:focus-visible),
+  .preset:has(input:focus-visible) {
+    outline: 1px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+
+  .customizer__selected {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+  }
+
+  .customizer__presets {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .preset {
+    padding: var(--space-2) var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition:
+      border-color var(--duration-fast) var(--ease-standard),
+      color var(--duration-fast) var(--ease-standard);
+  }
+
+  .preset:has(input:checked) {
+    border-color: var(--color-text-primary);
+    color: var(--color-text-primary);
+  }
+
+  /* Portrait: copy at the top, the keyboard in the middle (camera), compact controls below. */
+  @media (max-width: 760px) {
+    .customizer__inner {
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: space-between;
+    }
+
+    .customizer__controls {
+      width: 100%;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-bg-overlay);
+    }
+
+    .customizer__group legend {
+      margin-bottom: var(--space-2);
+    }
+
+    .customizer__selected,
+    .customizer__copy {
+      display: none;
+    }
+
+    .swatch {
+      width: 28px;
+      height: 28px;
+    }
+  }
+</style>
+
+<script>
+  import { CHASSIS, KEYCAPS, LEDS, PRESETS, CUSTOMIZE_EVENT, presetFor, type Customization } from "../../scripts/customization";
+
+  const labels: Record<keyof Customization, { id: string; label: string }[]> = { chassis: CHASSIS, keycaps: KEYCAPS, led: LEDS };
+
+  for (const root of document.querySelectorAll<HTMLElement>("[data-customizer]")) {
+    const form = root.querySelector("form")!;
+    const read = (): Customization => ({
+      chassis: (form.elements.namedItem("chassis") as RadioNodeList).value,
+      keycaps: (form.elements.namedItem("keycaps") as RadioNodeList).value,
+      led: (form.elements.namedItem("led") as RadioNodeList).value,
+    });
+    const publish = () => {
+      const config = read();
+      for (const name of Object.keys(labels) as (keyof Customization)[]) {
+        const output = root.querySelector<HTMLElement>(`[data-selected="${name}"]`);
+        if (output) output.textContent = labels[name].find((o) => o.id === config[name])?.label ?? "";
+      }
+      // A preset stays selected only while the configuration still matches it.
+      const preset = presetFor(config);
+      for (const input of form.querySelectorAll<HTMLInputElement>('input[name="preset"]')) {
+        input.checked = input.value === preset;
+      }
+      document.dispatchEvent(new CustomEvent(CUSTOMIZE_EVENT, { detail: config }));
+    };
+
+    form.addEventListener("change", (event) => {
+      const input = event.target as HTMLInputElement;
+      if (input.name === "preset") {
+        const config = PRESETS.find((p) => p.id === input.value)?.config;
+        if (config) {
+          for (const [name, value] of Object.entries(config)) {
+            const option = form.querySelector<HTMLInputElement>(`input[name="${name}"][value="${value}"]`);
+            if (option) option.checked = true;
+          }
+        }
+      }
+      publish();
+    });
+    publish();
+  }
+</script>

@@ -1,0 +1,182 @@
+---
+// The closing step of the narrative: the configured keyboard turns to the left of the stage
+// and this summary sits on the right. VOLT is fictional: the price is illustrative and the
+// "pay" button only confirms that nothing is charged. No payment or personal data is taken.
+import { CHASSIS, KEYCAPS, LEDS, DEFAULT_CUSTOMIZATION } from "../../scripts/customization";
+
+const PRICE = "USD 249";
+const label = (options: { id: string; label: string }[], id: string) => options.find((o) => o.id === id)?.label;
+---
+
+<section class="purchase" id="comprar" aria-labelledby="purchase-title" data-purchase>
+  <div class="purchase__inner page-container">
+    <div class="purchase__sheet">
+      <p class="eyebrow">Tu pedido</p>
+      <h2 class="purchase__title" id="purchase-title">Tu VOLT, listo.</h2>
+
+      <dl class="purchase__specs">
+        <div><dt>Distribución</dt><dd>75 % · 78 teclas</dd></div>
+        <div><dt>Chasis</dt><dd><span data-summary="chassis">{label(CHASSIS, DEFAULT_CUSTOMIZATION.chassis)}</span> · aluminio cepillado</dd></div>
+        <div><dt>Keycaps</dt><dd><span data-summary="keycaps">{label(KEYCAPS, DEFAULT_CUSTOMIZATION.keycaps)}</span> · PBT perfil OEM</dd></div>
+        <div><dt>Retroiluminación</dt><dd data-summary="led">{label(LEDS, DEFAULT_CUSTOMIZATION.led)}</dd></div>
+      </dl>
+
+      <div class="purchase__total">
+        <span>Total</span>
+        <strong>{PRICE}</strong>
+      </div>
+
+      <div class="purchase__actions">
+        <button class="button button--primary" type="button" data-pay>
+          Pagar {PRICE}
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+            <path d="M2 8h12M9 3l5 5-5 5"></path>
+          </svg>
+        </button>
+        <a class="button button--secondary button--compact" href="#personalizar">Cambiar configuración</a>
+      </div>
+      <p class="purchase__status" role="status" data-pay-status></p>
+
+      <p class="purchase__note">
+        VOLT es un producto ficticio y esta página es una demostración de portafolio. El precio es
+        ilustrativo: no se vende, no se cobra y no se piden datos personales.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .purchase {
+    min-height: 100svh;
+    pointer-events: none;
+  }
+
+  .purchase__inner {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 100svh;
+    padding-block: calc(var(--navbar-height) + var(--space-6)) var(--space-10);
+  }
+
+  .purchase__sheet {
+    display: grid;
+    gap: var(--space-5);
+    width: min(360px, 100%);
+    pointer-events: auto;
+  }
+
+  .purchase__title {
+    font-size: var(--font-size-section);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-tight);
+  }
+
+  .purchase__specs {
+    display: grid;
+    margin: 0;
+    border-top: 1px solid var(--color-divider);
+  }
+
+  .purchase__specs div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-block: var(--space-3);
+    border-bottom: 1px solid var(--color-divider);
+  }
+
+  .purchase__specs dt {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  .purchase__specs dd {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    text-align: right;
+  }
+
+  .purchase__total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    color: var(--color-text-secondary);
+  }
+
+  .purchase__total strong {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-regular);
+    letter-spacing: var(--letter-spacing-tight);
+  }
+
+  .purchase__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .purchase__status:empty {
+    display: none;
+  }
+
+  .purchase__status {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+  }
+
+  .purchase__note {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+  }
+
+  /* Portrait: the keyboard in the upper part of the stage (camera), the summary below it. */
+  @media (max-width: 760px) {
+    .purchase__inner {
+      align-items: flex-end;
+      justify-content: stretch;
+    }
+
+    .purchase__sheet {
+      width: 100%;
+      gap: var(--space-4);
+      padding: var(--space-4);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-bg-overlay);
+    }
+
+    /* Compact, so the keyboard keeps the upper part of the screen. */
+    .purchase__sheet > .eyebrow {
+      display: none;
+    }
+
+    .purchase__specs div {
+      padding-block: var(--space-2);
+    }
+  }
+</style>
+
+<script>
+  import { CHASSIS, KEYCAPS, LEDS, CUSTOMIZE_EVENT, type Customization } from "../../scripts/customization";
+
+  for (const root of document.querySelectorAll<HTMLElement>("[data-purchase]")) {
+    const set = (name: string, text = "") => {
+      const node = root.querySelector(`[data-summary="${name}"]`);
+      if (node) node.textContent = text;
+    };
+    document.addEventListener(CUSTOMIZE_EVENT, (event) => {
+      const config = (event as CustomEvent<Customization>).detail;
+      set("chassis", CHASSIS.find((c) => c.id === config.chassis)?.label);
+      set("keycaps", KEYCAPS.find((k) => k.id === config.keycaps)?.label);
+      set("led", LEDS.find((l) => l.id === config.led)?.label);
+    });
+    const status = root.querySelector<HTMLElement>("[data-pay-status]");
+    root.querySelector("[data-pay]")?.addEventListener("click", () => {
+      if (status) status.textContent = "Demostración: no se realizó ningún cobro. VOLT no está a la venta.";
+    });
+  }
+</script>

@@ -1,0 +1,89 @@
+:root {
+  /* Color system */
+  --color-bg: #08090a;
+  --color-bg-elevated: #101214;
+  --color-bg-surface: #151719;
+  --color-bg-overlay: rgba(8, 9, 10, 0.78);
+
+  --color-text-primary: #f2f2f0;
+  --color-text-secondary: #b7b8b9;
+  --color-text-muted: #777a7d;
+  --color-text-inverse: #090a0b;
+
+  --color-border: rgba(235, 238, 240, 0.16);
+  --color-border-strong: rgba(235, 238, 240, 0.38);
+  --color-divider: rgba(235, 238, 240, 0.12);
+
+  --color-accent: #f2f0e9;
+  --color-accent-hover: #ffffff;
+  --color-focus: #d5d5d0;
+
+  /* Typography */
+  --font-sans: var(--font-inter), "Helvetica Neue", Arial, sans-serif;
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.8125rem;
+  --font-size-base: 0.9375rem;
+  --font-size-md: 1.0625rem;
+  --font-size-lg: 1.375rem;
+  --font-size-xl: 1.875rem;
+  --font-size-2xl: 2.5rem;
+
+  --font-size-hero: clamp(3rem, 5.1vw, 5rem);
+  --font-size-section: clamp(1.75rem, 2.5vw, 2.5rem);
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+
+  --line-height-tight: 1.02;
+  --line-height-heading: 1.12;
+  --line-height-body: 1.55;
+
+  --letter-spacing-tight: -0.045em;
+  --letter-spacing-normal: -0.015em;
+  --letter-spacing-wide: 0.12em;
+  --letter-spacing-brand: 0.35em;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Layout */
+  --container-max: 1440px;
+  --container-padding: clamp(24px, 6.5vw, 104px);
+  --navbar-height: 76px;
+  --section-padding-block: clamp(72px, 9vw, 144px);
+
+  /* Shape */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-pill: 999px;
+
+  /* Buttons */
+  --button-height: 44px;
+  --button-height-lg: 52px;
+  --button-padding-inline: 24px;
+  --button-font-size: 12px;
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-smooth: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --duration-fast: 180ms;
+  --duration-normal: 320ms;
+  --duration-slow: 700ms;
+
+  /* Shadows */
+  --shadow-product: 0 32px 80px rgba(0, 0, 0, 0.48);
+  --shadow-tooltip: 0 12px 36px rgba(0, 0, 0, 0.34);
+}

@@ -1,0 +1,84 @@
+---
+const links = [
+  { href: "#inicio", label: "Inicio" },
+  { href: "#componentes", label: "Componentes" },
+  { href: "#personalizar", label: "Personalizar" },
+];
+---
+
+<header class="navbar" data-navbar>
+  <nav class="navbar__inner page-container" aria-label="Principal">
+    <a class="navbar__brand" href="#inicio">VOLT</a>
+    <ul class="navbar__links">
+      {links.map((link) => (
+        <li>
+          <a href={link.href}>{link.label}</a>
+        </li>
+      ))}
+    </ul>
+    <a class="button button--secondary button--compact" href="#comprar">Comprar</a>
+  </nav>
+</header>
+
+<style>
+  /* Fixed, so the visitor can always get back to the start; it gains a quiet backdrop once
+     the page has scrolled. */
+  .navbar {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 20;
+    transition:
+      background-color var(--duration-normal) var(--ease-standard),
+      border-color var(--duration-normal) var(--ease-standard);
+    border-bottom: 1px solid transparent;
+  }
+
+  .navbar[data-scrolled] {
+    background: rgba(8, 9, 10, 0.72);
+    border-bottom-color: var(--color-divider);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  .navbar__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--navbar-height);
+  }
+
+  .navbar__brand {
+    font-size: 14px;
+    font-weight: var(--font-weight-regular);
+    letter-spacing: var(--letter-spacing-brand);
+  }
+
+  .navbar__links {
+    display: flex;
+    gap: 32px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
+  .navbar__links a {
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .navbar__links a:hover {
+    color: var(--color-text-primary);
+  }
+
+  @media (max-width: 760px) {
+    .navbar__links {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  for (const navbar of document.querySelectorAll<HTMLElement>("[data-navbar]")) {
+    const update = () => navbar.toggleAttribute("data-scrolled", window.scrollY > 24);
+    window.addEventListener("scroll", update, { passive: true });
+    update();
+  }
+</script>

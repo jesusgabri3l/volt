@@ -1,0 +1,89 @@
+---
+// Fixed on the right: which of the main sections is in view ("02 / 04"), on every section.
+const sections = [
+  { id: "inicio", label: "Inicio" },
+  { id: "componentes", label: "Componentes" },
+  { id: "personalizar", label: "Personalizar" },
+  { id: "comprar", label: "Comprar" },
+];
+---
+
+<nav class="indicator" aria-label="Secciones" data-indicator>
+  <ol class="indicator__list">
+    {sections.map((section, index) => (
+      <li>
+        <a href={`#${section.id}`} data-section={section.id}>
+          {String(index + 1).padStart(2, "0")}
+          <span class="visually-hidden">{section.label}</span>
+        </a>
+      </li>
+    ))}
+  </ol>
+  <span class="indicator__line" aria-hidden="true"></span>
+  <span class="indicator__total" aria-hidden="true">{String(sections.length).padStart(2, "0")}</span>
+</nav>
+
+<style>
+  .indicator {
+    position: fixed;
+    right: calc(var(--container-padding) / 2);
+    top: 50%;
+    z-index: 15;
+    display: grid;
+    justify-items: center;
+    gap: var(--space-3);
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+  }
+
+  .indicator__list {
+    display: grid;
+  }
+
+  /* Only the current number shows; the others stay reachable for keyboard users. */
+  .indicator__list li {
+    grid-area: 1 / 1;
+  }
+
+  .indicator__list a {
+    display: block;
+    color: var(--color-text-primary);
+    opacity: 0;
+    transition: opacity var(--duration-normal) var(--ease-standard);
+  }
+
+  .indicator__list a[aria-current="true"],
+  .indicator__list a:focus-visible {
+    opacity: 1;
+  }
+
+  .indicator__line {
+    width: 1px;
+    height: 32px;
+    background: var(--color-text-primary);
+  }
+
+  @media (max-width: 760px) {
+    .indicator {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>("[data-indicator]")) {
+    const links = [...root.querySelectorAll<HTMLAnchorElement>("[data-section]")];
+    const targets = links.map((link) => document.getElementById(link.dataset.section!)).filter(Boolean) as HTMLElement[];
+    const update = () => {
+      // The current section is the last one whose top has passed the middle of the viewport.
+      const middle = window.innerHeight / 2;
+      let current = targets[0];
+      for (const target of targets) if (target.getBoundingClientRect().top <= middle) current = target;
+      for (const link of links) link.setAttribute("aria-current", String(link.dataset.section === current?.id));
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    update();
+  }
+</script>

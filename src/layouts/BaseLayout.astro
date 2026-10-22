@@ -1,0 +1,47 @@
+---
+import { Font } from "astro:assets";
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+// Share card for LinkedIn, X, WhatsApp, Slack…: a 1200×630 capture of the real-time scene
+// (public/og.jpg). Social networks only read absolute URLs, so the deployed build needs SITE_URL.
+const ogImage = new URL("/og.jpg", Astro.site ?? Astro.url);
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefined;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Teclado mecánico VOLT en negro junto al lema Precisión en cada detalle." />
+    {canonical && <meta property="og:url" content={canonical} />}
+    <meta property="og:locale" content="es_ES" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="theme-color" content="#08090a" />
+    <meta name="generator" content={Astro.generator} />
+    <Font cssVariable="--font-inter" preload />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+

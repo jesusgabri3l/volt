@@ -1,0 +1,184 @@
+---
+// Concept highlights. "78 teclas" is counted from the model; the rest describes the concept.
+const highlights = [
+  { label: "Distribución", value: "75 % · 78 teclas" },
+  { label: "Chasis", value: "Aluminio cepillado" },
+  { label: "Keycaps", value: "PBT perfil OEM" },
+  { label: "Iluminación", value: "Retroiluminación personalizable" },
+];
+---
+
+<section class="hero" id="inicio" aria-labelledby="hero-title" data-scene-stop>
+  <div class="hero__content page-container">
+    <p class="eyebrow">Teclado mecánico</p>
+    <h1 class="hero__title" id="hero-title">
+      Precisión<br />
+      en cada <span class="hero__title-muted">detalle.</span>
+    </h1>
+    <p class="hero__copy">Diseñado para quienes buscan más que un teclado.</p>
+    <a class="button button--secondary hero__explore" href="#componentes" data-arrow="down">
+      Explorar
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+        <path d="M8 2v12M3 9l5 5 5-5"></path>
+      </svg>
+    </a>
+  </div>
+
+  <div class="hero__footer page-container">
+    <dl class="hero__highlights">
+      {highlights.map((item) => (
+        <div class="hero__highlight">
+          <dt>{item.label}</dt>
+          <dd>{item.value}</dd>
+        </div>
+      ))}
+    </dl>
+    <div class="hero__hints" aria-hidden="true">
+      <p class="hero__scroll">Arrastra para girarlo<span class="hero__type-hint">&nbsp;· Escribe para probarlo</span></p>
+      <p class="hero__scroll">
+        <span class="hero__scroll-line"></span>
+        Desliza para desarmarlo
+      </p>
+    </div>
+  </div>
+
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    min-height: 100svh;
+    pointer-events: none;
+  }
+
+  .hero a {
+    pointer-events: auto;
+  }
+
+  .hero__content {
+    display: grid;
+    align-content: center;
+    justify-items: start;
+    gap: var(--space-6);
+    padding-top: var(--navbar-height);
+  }
+
+  /* A small, slow bounce on the arrow invites scrolling; it stops under reduced motion. */
+  .hero__explore svg {
+    animation: hero-nudge 2.2s var(--ease-smooth) infinite;
+  }
+
+  @keyframes hero-nudge {
+    0%, 60%, 100% {
+      transform: translateY(0);
+    }
+    30% {
+      transform: translateY(4px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero__explore svg {
+      animation: none;
+    }
+  }
+
+  .hero__title {
+    font-size: var(--font-size-hero);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--letter-spacing-tight);
+  }
+
+  .hero__title-muted {
+    color: var(--color-text-muted);
+  }
+
+  .hero__copy {
+    max-width: 320px;
+    color: var(--color-text-secondary);
+  }
+
+  .hero__footer {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--space-8);
+    padding-bottom: var(--space-10);
+  }
+
+  .hero__highlights {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+    border-top: 1px solid var(--color-divider);
+  }
+
+  .hero__highlight {
+    display: grid;
+    gap: var(--space-1);
+    min-width: 150px;
+    padding: var(--space-4) var(--space-8) 0 0;
+  }
+
+  .hero__highlight + .hero__highlight {
+    padding-left: var(--space-8);
+    border-left: 1px solid var(--color-divider);
+  }
+
+  .hero__highlight dt {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+  }
+
+  .hero__highlight dd {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+  }
+
+  .hero__hints {
+    display: grid;
+    justify-items: end;
+    gap: var(--space-2);
+  }
+
+  .hero__scroll {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .hero__scroll-line {
+    width: 40px;
+    height: 1px;
+    background: var(--color-border-strong);
+  }
+
+  @media (max-width: 760px) {
+    .hero__content {
+      align-content: start;
+      padding-top: calc(var(--navbar-height) + var(--space-8));
+    }
+
+    .hero__highlights {
+      display: none;
+    }
+  }
+
+  /* Typing needs a physical keyboard, which phones and tablets rarely have. */
+  @media (pointer: coarse), (max-width: 760px) {
+    .hero__type-hint {
+      display: none;
+    }
+  }
+</style>

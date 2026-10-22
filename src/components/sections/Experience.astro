@@ -1,0 +1,56 @@
+---
+import { Image } from "astro:assets";
+import ProductScene from "../product/ProductScene.astro";
+// Captured from the real-time scene at progress 0 (`__voltScene.capture()` in dev). Shown
+// only when the 3D scene fails, so it is not fetched up front.
+import heroStill from "../../assets/images/hero-poster.webp";
+---
+
+<!--
+  The scroll narrative. One 3D stage stays pinned to the viewport while the hero and the
+  component steps scroll over it; progress through this element drives the scene.
+-->
+<div class="experience" data-experience>
+  <div class="experience__stage">
+    <ProductScene
+      modelUrl="/assets/models/volt-keyboard.glb"
+      label="Teclado mecánico VOLT sobre un piso de concreto oscuro: chasis de aluminio grafito y teclas negras."
+    >
+      <Image
+        class="experience__poster"
+        src={heroStill}
+        alt=""
+        widths={[1280, 1920, 2857]}
+        sizes="100vw"
+        quality={92}
+        loading="lazy"
+      />
+    </ProductScene>
+  </div>
+  <slot />
+</div>
+
+<style>
+  .experience {
+    position: relative;
+  }
+
+  .experience__stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    margin-bottom: -100svh;
+  }
+
+  .experience__poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right center;
+  }
+
+  .experience > :global(:not(.experience__stage)) {
+    position: relative;
+    z-index: 1;
+  }
+</style>

@@ -1,0 +1,62 @@
+---
+// The author's profiles: the same LinkedIn as the CEIBA footer, the GitHub account that hosts both projects.
+const profiles = [
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/jesus-ahumada" },
+  { label: "GitHub", href: "https://github.com/jesusgabri3l" },
+];
+---
+
+<footer class="footer">
+  <div class="footer__inner page-container">
+    <p class="footer__brand">VOLT</p>
+    <ul class="footer__links" aria-label="Autor">
+      {profiles.map((profile) => (
+        <li>
+          <a href={profile.href} target="_blank" rel="noopener noreferrer">
+            {profile.label}
+            <span class="visually-hidden"> (se abre en una pestaña nueva)</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <p class="footer__disclaimer">
+      Proyecto conceptual de portafolio. VOLT es un producto ficticio y no está a la venta.
+    </p>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--color-divider);
+  }
+
+  .footer__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+    padding-block: var(--space-10);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+  }
+
+  .footer__brand {
+    color: var(--color-text-primary);
+    font-size: 14px;
+    letter-spacing: var(--letter-spacing-brand);
+  }
+
+  .footer__links {
+    display: flex;
+    gap: var(--space-6);
+  }
+
+  .footer__links a {
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .footer__links a:hover {
+    color: var(--color-text-primary);
+  }
+</style>

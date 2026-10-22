@@ -1,0 +1,123 @@
+---
+/**
+ * Reserves the 3D viewport and starts the three.js scene after the page has rendered.
+ * While loading, only the page background shows and the live keyboard fades in: a still
+ * cannot match the live framing at every viewport size, so swapping one for the other
+ * reads as a jump. The slot holds the static fallback (the poster), shown if WebGL or the
+ * model fails, and also while a slow connection keeps the model loading past a few seconds.
+ */
+interface Props {
+  modelUrl: string;
+  label: string;
+}
+
+const { modelUrl, label } = Astro.props;
+---
+
+<div class="product-scene" data-model-url={modelUrl} data-state="loading">
+  <div class="product-scene__fallback">
+    <slot />
+  </div>
+  <canvas class="product-scene__canvas" role="img" aria-label={label}></canvas>
+</div>
+
+<style>
+  .product-scene {
+    position: absolute;
+    inset: 0;
+  }
+
+  .product-scene__fallback,
+  .product-scene__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .product-scene__canvas {
+    cursor: grab;
+    opacity: 0;
+    transition: opacity var(--duration-slow) var(--ease-standard);
+  }
+
+  .product-scene[data-state="ready"] .product-scene__canvas {
+    opacity: 1;
+  }
+
+  .product-scene__canvas[data-dragging] {
+    cursor: grabbing;
+  }
+
+  .product-scene:not([data-state="failed"], [data-state="loading"][data-slow]) .product-scene__fallback {
+    visibility: hidden;
+  }
+
+  .product-scene[data-state="failed"] .product-scene__canvas {
+    display: none;
+  }
+</style>
+
+<script>
+  import { CUSTOMIZE_EVENT, type Customization } from "../../scripts/customization";
+
+  let lastCustomization: Customization | undefined;
+  document.addEventListener(CUSTOMIZE_EVENT, (event) => {
+    lastCustomization = (event as CustomEvent<Customization>).detail;
+  });
+
+  function supportsWebGL() {
+    try {
+      return !!document.createElement("canvas").getContext("webgl2");
+    } catch {
+      return false;
+    }
+  }
+
+  /** After this long without the scene, the poster stands in until it arrives. */
+  const SLOW_LOAD_MS = 6000;
+
+  for (const root of document.querySelectorAll<HTMLElement>(".product-scene")) {
+    const canvas = root.querySelector("canvas");
+    const modelUrl = root.dataset.modelUrl;
+    if (!canvas || !modelUrl || !supportsWebGL()) {
+      root.dataset.state = "failed";
+      continue;
+    }
+    const slow = window.setTimeout(() => root.toggleAttribute("data-slow", true), SLOW_LOAD_MS);
+    // Loaded on demand so three.js never blocks the first render of the page.
+    Promise.all([import("../../scripts/scene/product-scene"), import("../../scripts/scroll-progress")])
+      .then(async ([{ createProductScene }, { observeNarrativeProgress }]) => {
+        const hotspots = document.querySelectorAll<HTMLElement>("[data-hotspot]");
+        const scene = await createProductScene({
+          canvas,
+          modelUrl,
+          // Pin each hotspot to its component's projected anchor.
+          onAnchors(anchors) {
+            for (const hotspot of hotspots) {
+              const anchor = anchors[hotspot.dataset.hotspot ?? ""];
+              if (!anchor) continue;
+              hotspot.style.setProperty("--x", `${anchor.x}px`);
+              hotspot.style.setProperty("--y", `${anchor.y}px`);
+              hotspot.toggleAttribute("data-visible", anchor.visible);
+            }
+          },
+        });
+        // Customization controls publish their choice on the document; the last one is
+        // kept so a choice made before the scene loaded still applies.
+        const apply = (event: Event) => scene.setCustomization((event as CustomEvent<Customization>).detail);
+        document.addEventListener(CUSTOMIZE_EVENT, apply);
+        if (lastCustomization) scene.setCustomization(lastCustomization);
+        // The scroll narrative: progress through the enclosing experience drives the scene.
+        const experience = root.closest<HTMLElement>("[data-experience]");
+        if (experience) observeNarrativeProgress(experience, (progress) => scene.setProgress(progress));
+        window.clearTimeout(slow);
+        root.dataset.state = "ready";
+      })
+      .catch((error: unknown) => {
+        console.error("[VOLT] 3D scene failed to load", error);
+        window.clearTimeout(slow);
+        root.dataset.state = "failed";
+      });
+  }
+</script>

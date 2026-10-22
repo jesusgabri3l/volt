@@ -1,0 +1,295 @@
+---
+// Concept copy: these describe the fictional product, not measured specifications.
+// The section is pinned while it scrolls; each component takes one viewport of scroll and
+// replaces the previous one in place. The 3D stage follows the same order
+// (`COMPONENTS` in src/scripts/scene/timeline.ts) and anchors each hotspot to its part.
+const components = [
+  {
+    id: "keycaps",
+    name: "Keycaps",
+    copy: "PBT de doble inyección, resistente al desgaste y con una textura premium.",
+    detail: { title: "Perfil OEM", copy: "Comodidad y precisión en cada pulsación." },
+  },
+  {
+    id: "switches",
+    name: "Switches",
+    copy: "Mecanismos diseñados para una respuesta precisa y consistente.",
+    detail: { title: "Lineales", copy: "Un recorrido suave de principio a fin." },
+  },
+  {
+    id: "plate",
+    name: "Placa",
+    copy: "Una estructura que aporta estabilidad al conjunto.",
+    detail: { title: "Aluminio", copy: "Rigidez sin perder una pulsación amortiguada." },
+  },
+  {
+    id: "pcb",
+    name: "PCB",
+    copy: "La base electrónica que conecta cada pulsación.",
+    detail: { title: "Hot-swap", copy: "Cambia los switches sin soldar." },
+  },
+  {
+    id: "chassis",
+    name: "Chasis",
+    copy: "Aluminio con un acabado sobrio y mecanizado de precisión.",
+    detail: { title: "Mecanizado CNC", copy: "Un solo bloque de aluminio cepillado." },
+  },
+];
+---
+
+<section class="components" id="componentes" aria-labelledby="components-title" data-components data-scene-stops="5">
+  <div class="components__panel">
+    <div class="components__text page-container">
+      <h2 class="visually-hidden" id="components-title">Componentes</h2>
+      {components.map((component, index) => (
+        <article
+          class="components__step"
+          data-step={index}
+          data-active={index === 0 ? "" : undefined}
+          aria-labelledby={`component-${component.id}`}
+        >
+          <p class="eyebrow">Componente {String(index + 1).padStart(2, "0")} / 05</p>
+          <h3 class="components__name" id={`component-${component.id}`}>{component.name}</h3>
+          <p class="components__copy">{component.copy}</p>
+        </article>
+      ))}
+      <ol class="components__index">
+        {components.map((component, index) => (
+          <li data-step={index} data-active={index === 0 ? "" : undefined}>
+            <a href={`#componentes`} data-goto={index}>{component.name}</a>
+          </li>
+        ))}
+      </ol>
+    </div>
+
+    {components.map((component, index) => (
+      <div
+        class="hotspot"
+        data-hotspot={component.id}
+        data-step={index}
+        data-active={index === 0 ? "" : undefined}
+      >
+        <button
+          class="hotspot__dot"
+          type="button"
+          aria-expanded="false"
+          aria-controls={`hotspot-${component.id}`}
+          aria-label={`${component.name}: ${component.detail.title}`}
+        >
+          <span aria-hidden="true">+</span>
+        </button>
+        <div class="hotspot__card" id={`hotspot-${component.id}`} role="note">
+          <p class="hotspot__title">{component.detail.title}</p>
+          <p class="hotspot__copy">{component.detail.copy}</p>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+
+<style>
+  /* Five viewports of scroll for five components; the panel stays put meanwhile. */
+  .components {
+    height: 500svh;
+    pointer-events: none;
+  }
+
+  .components__panel {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+  }
+
+  .components__text {
+    position: relative;
+    display: grid;
+    align-content: center;
+    height: 100%;
+  }
+
+  .components__step {
+    grid-area: 1 / 1;
+    display: grid;
+    justify-items: start;
+    gap: var(--space-4);
+    opacity: 0;
+    transform: translateY(12px);
+    transition:
+      opacity var(--duration-normal) var(--ease-standard),
+      transform var(--duration-normal) var(--ease-standard);
+  }
+
+  .components__step[data-active] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .components__name {
+    font-size: var(--font-size-section);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-tight);
+  }
+
+  .components__copy {
+    max-width: 300px;
+    color: var(--color-text-secondary);
+  }
+
+  .components__index {
+    grid-area: 2 / 1;
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+    font-size: var(--font-size-sm);
+    pointer-events: auto;
+  }
+
+  .components__index a {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--color-text-muted);
+    transition: color var(--duration-fast) var(--ease-standard);
+  }
+
+  .components__index a::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+  }
+
+  .components__index li[data-active] a {
+    color: var(--color-text-primary);
+  }
+
+  .components__index li[data-active] a::before {
+    background: currentColor;
+  }
+
+  /* Hotspots: positioned each frame at their 3D anchor by the scene (--x, --y in px). */
+  .hotspot {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate(var(--x, -100px), var(--y, -100px));
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--duration-normal) var(--ease-standard);
+  }
+
+  .hotspot[data-active][data-visible] {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .hotspot__dot {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    margin: -14px 0 0 -14px;
+    border: 1px solid var(--color-text-primary);
+    border-radius: 50%;
+    background: rgba(8, 9, 10, 0.55);
+    color: var(--color-text-primary);
+    font: inherit;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .hotspot__card {
+    position: absolute;
+    left: 30px;
+    top: -34px;
+    width: 230px;
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-overlay);
+    box-shadow: var(--shadow-tooltip);
+  }
+
+  .hotspot__title {
+    font-size: var(--font-size-base);
+  }
+
+  .hotspot__copy {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+  }
+
+  @media (max-width: 760px) {
+    .components__text {
+      align-content: start;
+      padding-top: calc(var(--navbar-height) + var(--space-6));
+    }
+
+    /* The step's own "Componente 0X / 05" says where the visitor is; the index would
+       take the room the keyboard needs. */
+    .components__index {
+      display: none;
+    }
+
+    .hotspot__card {
+      display: none;
+    }
+
+    /* Below the dot, centred on it but kept 16px inside the screen edges. */
+    .hotspot[aria-expanded] .hotspot__card {
+      display: block;
+      left: clamp(calc(16px - var(--x, 0px)), -115px, calc(100vw - 246px - var(--x, 0px)));
+      top: 22px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .components__step {
+      transform: none;
+    }
+  }
+</style>
+
+<script>
+  import { observeScrollProgress } from "../../scripts/scroll-progress";
+
+  for (const section of document.querySelectorAll<HTMLElement>("[data-components]")) {
+    const steps = section.querySelectorAll<HTMLElement>("[data-step]");
+    const count = section.querySelectorAll(".components__step").length;
+    let active = -1;
+    observeScrollProgress(section, (progress) => {
+      const index = Math.min(count - 1, Math.round(progress * (count - 1)));
+      if (index === active) return;
+      active = index;
+      for (const element of steps) {
+        if (Number(element.dataset.step) === index) element.dataset.active = "";
+        else delete element.dataset.active;
+      }
+    });
+
+    // Index links jump to the scroll position of each component.
+    for (const link of section.querySelectorAll<HTMLAnchorElement>("[data-goto]")) {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        const index = Number(link.dataset.goto);
+        const travel = section.offsetHeight - window.innerHeight;
+        const top = section.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top: top + (travel * index) / (count - 1) });
+      });
+    }
+
+    // Hotspot cards toggle on activation for keyboard and touch; hover also reveals them.
+    for (const dot of section.querySelectorAll<HTMLButtonElement>(".hotspot__dot")) {
+      dot.addEventListener("click", () => {
+        const expanded = dot.getAttribute("aria-expanded") === "true";
+        dot.setAttribute("aria-expanded", String(!expanded));
+        dot.parentElement?.toggleAttribute("aria-expanded", !expanded);
+      });
+    }
+  }
+</script>
