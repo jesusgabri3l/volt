@@ -2,7 +2,7 @@
 // The author's profiles: the same LinkedIn as the CEIBA footer, the GitHub account that hosts both projects.
 const profiles = [
   { label: "LinkedIn", href: "https://www.linkedin.com/in/jesus-ahumada" },
-  { label: "GitHub", href: "https://github.com/jesusgabri3l" },
+  { label: "GitHub", href: "https://github.com/jesusgabri3l", event: "github" },
 ];
 ---
 
@@ -12,7 +12,7 @@ const profiles = [
     <ul class="footer__links" aria-label="Autor">
       {profiles.map((profile) => (
         <li>
-          <a href={profile.href} target="_blank" rel="noopener noreferrer">
+          <a href={profile.href} target="_blank" rel="noopener noreferrer" data-umami-event={profile.event}>
             {profile.label}
             <span class="visually-hidden"> (se abre en una pestaña nueva)</span>
           </a>

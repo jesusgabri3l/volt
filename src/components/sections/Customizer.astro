@@ -28,6 +28,9 @@ const groups = [
                   type="radio"
                   name={group.name}
                   value={option.id}
+                  data-umami-event="personalizar"
+                  data-umami-event-grupo={group.name}
+                  data-umami-event-opcion={option.id}
                   checked={DEFAULT_CUSTOMIZATION[group.name] === option.id}
                 />
                 <span class="swatch__color" style={`--swatch: ${option.color}`} aria-hidden="true"></span>
@@ -44,7 +47,16 @@ const groups = [
         <div class="customizer__presets">
           {PRESETS.map((preset, index) => (
             <label class="preset">
-              <input class="visually-hidden" type="radio" name="preset" value={preset.id} checked={index === 0} />
+              <input
+                class="visually-hidden"
+                type="radio"
+                name="preset"
+                value={preset.id}
+                checked={index === 0}
+                data-umami-event="personalizar"
+                data-umami-event-grupo="estilo"
+                data-umami-event-opcion={preset.id}
+              />
               <span>{preset.label}</span>
             </label>
           ))}

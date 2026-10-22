@@ -76,6 +76,10 @@ Lighthouse 12 (build de producción, laboratorio):
 
 La puntuación de rendimiento la limita el *Total Blocking Time*. Lighthouse corre en un Chrome sin GPU, así que WebGL se emula en la CPU (SwiftShader) y cada llamada gráfica cuenta como bloqueo del hilo principal. En un navegador con GPU el arranque bloquea unos 221 ms en total, como se mide arriba. El contenido aparece rápido (LCP de 1.4 s en móvil simulado) y no hay saltos de layout.
 
+## Analítica
+
+Las visitas se miden con [Umami](https://umami.is), sin cookies y solo en el sitio publicado (el script no se carga en desarrollo). Eventos: `personalizar` (con el grupo y la opción elegida), `comprar` (desde la navbar o desde el resumen del pedido) y `github` (enlace del footer). Se declaran con atributos `data-umami-event` en el HTML.
+
 ## Accesibilidad y compatibilidad
 
 - Encabezados y landmarks semánticos, `lang="es"`, textos alternativos y nombres accesibles en todos los controles.

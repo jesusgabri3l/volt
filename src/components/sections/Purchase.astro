@@ -27,7 +27,7 @@ const label = (options: { id: string; label: string }[], id: string) => options.
       </div>
 
       <div class="purchase__actions">
-        <button class="button button--primary" type="button" data-pay>
+        <button class="button button--primary" type="button" data-pay data-umami-event="comprar" data-umami-event-origen="pedido">
           Pagar {PRICE}
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
             <path d="M2 8h12M9 3l5 5-5 5"></path>

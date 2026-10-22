@@ -39,6 +39,11 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefin
     <meta name="theme-color" content="#08090a" />
     <meta name="generator" content={Astro.generator} />
     <Font cssVariable="--font-inter" preload />
+    {/* Visit analytics (Umami, cookieless), on the published site only. Events are the
+        `data-umami-event` attributes on the tracked controls. */}
+    {import.meta.env.PROD && (
+      <script is:inline defer src="https://cloud.umami.is/script.js" data-website-id="38a582bb-860a-460b-bbdb-5046ad2a6a70"></script>
+    )}
   </head>
   <body>
     <slot />
