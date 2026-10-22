@@ -95,10 +95,13 @@ const components = [
     pointer-events: none;
   }
 
+  /* Clipped: hotspots follow their parts, and when the visitor turns the keyboard a part can
+     project past the screen edge; unclipped, that widens the page and scrolls it sideways. */
   .components__panel {
     position: sticky;
     top: 0;
     height: 100svh;
+    overflow: clip;
   }
 
   .components__text {
