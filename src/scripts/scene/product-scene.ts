@@ -132,7 +132,7 @@ const FOCUS_GAP = 0.024;
  */
 const STILL_DELAY = 0.15;
 /** Contrast-adaptive sharpening, 0 (light) to 1 (strong). */
-const SHARPEN = 0.35;
+const SHARPEN = 0.7;
 const AO_STRENGTH = 1.4;
 /**
  * Frames averaged once the scene rests, each with a different sub-pixel camera offset:
