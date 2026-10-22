@@ -2,6 +2,8 @@
 
 **Demo:** https://jesusgabri3l.github.io/volt/
 
+[![Vista previa de VOLT: teclado mecánico negro junto al lema "Precisión en cada detalle"](public/og.jpg)](https://jesusgabri3l.github.io/volt/)
+
 Landing page interactiva en 3D de **VOLT**, un teclado mecánico conceptual. Es un proyecto de portafolio: el producto es ficticio y no está a la venta.
 
 El teclado es una escena 3D en tiempo real que acompaña todo el recorrido. Al hacer scroll se desarma pieza por pieza, se vuelve a armar y se puede personalizar. Se puede girar arrastrándolo y sus teclas responden al teclado físico y a los clics.
@@ -46,6 +48,8 @@ public/
 ```
 
 ## Rendimiento
+
+La prioridad de la página es la calidad de imagen: es una pieza de portafolio y el teclado tiene que verse nítido. Por eso se sacrifica algo de fluidez de forma deliberada: el render usa supersampling alto también en movimiento, y en GPUs integradas el scroll corre a unos 35–40 FPS en lugar de 60. Todo lo demás está optimizado para que ese costo quede solo en el render del teclado.
 
 El render se adapta al movimiento. En escritorio se dibuja siempre con supersampling 1.75× y MSAA 4×. Mientras algo se mueve (scroll, arrastre, teclas) no hay oclusión ambiental. Cuando la escena queda quieta, se activa la oclusión ambiental (GTAO) y se acumulan 8 frames con desplazamientos de subpíxel (secuencia de Halton) en un promedio: supersampling progresivo que deja nítidas las letras y los bordes vistos en ángulos rasantes, sin costo durante el movimiento. Cualquier cambio de vista, de color o de tamaño reinicia el promedio. Después de esas muestras no se dibuja nada. Si una GPU débil no sostiene el ritmo en movimiento (frames de más de 28 ms seguidos), el supersampling baja por escalones de 0.25 hasta la densidad de la pantalla.
 
