@@ -39,6 +39,21 @@ export function createKeySounds(): KeySounds {
   const last: Record<Kind, number> = { key: -1, large: -1 };
   let enabled = false;
 
+  // iOS only starts audio from inside a user gesture, and only if something plays there: resume
+  // and a silent one-sample buffer, both synchronous. After an await the gesture is gone.
+  const unlock = () => {
+    if (!context || context.state !== "suspended") return;
+    void context.resume();
+    const silence = context.createBufferSource();
+    silence.buffer = context.createBuffer(1, 1, context.sampleRate);
+    silence.connect(context.destination);
+    silence.start();
+  };
+  // A visitor whose saved choice is "on" never clicks the toggle, so their first touch unlocks.
+  const unlockOnGesture = () => {
+    for (const type of ["touchend", "click", "keydown"]) document.addEventListener(type, unlock, { capture: true });
+  };
+
   const load = () => {
     if (loading) return loading;
     try {
@@ -46,6 +61,7 @@ export function createKeySounds(): KeySounds {
     } catch {
       return (loading = Promise.resolve());
     }
+    unlockOnGesture();
     output = context.createGain();
     output.gain.value = VOLUME;
     output.connect(context.destination);
@@ -77,13 +93,15 @@ export function createKeySounds(): KeySounds {
     },
     set enabled(value) {
       enabled = value;
+      if (!value) return;
+      void load();
       // Turned on from a click, which also lets the browser start audio.
-      if (value) void load().then(() => context?.resume());
+      unlock();
     },
     play(code) {
       if (!enabled || !context || !output || !buffers) return;
       // A keystroke is a user gesture, so a context the browser held back can start now.
-      if (context.state === "suspended") void context.resume();
+      unlock();
       const source = context.createBufferSource();
       source.buffer = pick(code && LARGE_KEYS.has(code) ? "large" : "key");
       source.playbackRate.value = vary(1, PITCH_VARIATION);
