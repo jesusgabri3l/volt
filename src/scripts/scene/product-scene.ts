@@ -281,10 +281,19 @@ export async function createProductScene({
   });
   canvas.style.touchAction = "pan-y";
 
+  // A clicked swatch or preset keeps focus on its radio; typing still reaches the keyboard.
   const isTyping = (target: EventTarget | null) =>
-    target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+    target instanceof HTMLElement &&
+    (target.isContentEditable ||
+      /^(TEXTAREA|SELECT)$/.test(target.tagName) ||
+      (target instanceof HTMLInputElement && !/^(radio|checkbox)$/.test(target.type)));
   const onKeyDown = (event: KeyboardEvent) => {
-    if (event.repeat || isTyping(event.target)) return;
+    if (isTyping(event.target)) return;
+    // Space typed at the keyboard would also scroll the page a screen down. Focused controls
+    // keep it, so buttons and radios still work from the keyboard.
+    const onControl = event.target instanceof Element && event.target.closest("a, button, input, select, summary, [tabindex]");
+    if (event.code === "Space" && !onControl) event.preventDefault();
+    if (event.repeat) return;
     if (keys.pressCode(event.code)) {
       const cap = keys.capForCode(event.code);
       if (cap) underglow.pulse(cap);
