@@ -169,6 +169,9 @@ export async function createProductScene({
   // narrow screens are already dense, so they render at the screen's own density, capped.
   let pixelRatio = lowPower ? Math.min(dpr, 1.5) : Math.min(dpr * 1.75, 2);
   let slowFrames = 0;
+  // A step down waits for the next rest: resizing mid-scroll reads as a jump (the image
+  // softens and the frame stalls just as the keyboard starts to come apart on phones).
+  let pendingStep = false;
   // Neutral keeps the black keycaps black; AgX lifted them to gray.
   renderer.toneMapping = NeutralToneMapping;
   renderer.toneMappingExposure = EXPOSURE;
@@ -324,11 +327,16 @@ export async function createProductScene({
     // Count consecutive slow frames while moving (time between frames, so the GPU counts).
     slowFrames = animating && dt > SLOW_FRAME ? slowFrames + 1 : animating ? 0 : slowFrames;
     if (slowFrames >= SLOW_FRAME_COUNT && pixelRatio > Math.min(dpr, 1)) {
-      pixelRatio = Math.max(Math.min(dpr, 1), pixelRatio - SLOW_FRAME_STEP);
+      pendingStep = true;
       slowFrames = 0;
-      setSizes();
     }
     const still = rest >= STILL_DELAY;
+    if (still && pendingStep) {
+      pendingStep = false;
+      pixelRatio = Math.max(Math.min(dpr, 1), pixelRatio - SLOW_FRAME_STEP);
+      setSizes();
+      sample = 0;
+    }
     if (!still) sample = 0;
     // At rest: AO on, and each frame adds one jittered sample until the image is final.
     ao.enabled = still && !lowPower;
