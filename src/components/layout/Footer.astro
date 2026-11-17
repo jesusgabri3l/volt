@@ -13,7 +13,7 @@ const profiles = [
     <ul class="footer__links" aria-label="Autor">
       {profiles.map((profile) => (
         <li>
-          <a href={profile.href} target="_blank" rel="noopener noreferrer" data-umami-event={profile.event}>
+          <a href={profile.href} target="_blank" rel="noopener noreferrer" data-goatcounter-click={profile.event}>
             {profile.label}
             <span class="visually-hidden"> (se abre en una pestaña nueva)</span>
           </a>

@@ -84,8 +84,8 @@ const { modelUrl, label } = Astro.props;
     const set = (on: boolean) => {
       sounds.enabled = on;
       toggle.setAttribute("aria-pressed", String(on));
-      // Umami reads the attribute at click time: the state the click switches to.
-      toggle.dataset.umamiEventEstado = on ? "off" : "on";
+      // GoatCounter reads the attribute at click time: the state the click switches to.
+      toggle.dataset.goatcounterClick = on ? "sonido-off" : "sonido-on";
     };
     try {
       set(localStorage.getItem(SOUND_KEY) === "on");

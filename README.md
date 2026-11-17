@@ -86,7 +86,7 @@ La puntuación de rendimiento la limita el *Total Blocking Time*. Lighthouse cor
 
 ## Analítica
 
-Las visitas se miden con [Umami](https://umami.is), sin cookies y solo en el sitio publicado (el script no se carga en desarrollo). Eventos: `personalizar` (con el grupo y la opción elegida), `comprar` (desde la navbar o desde el resumen del pedido) y `github` (enlace del footer). Se declaran con atributos `data-umami-event` en el HTML.
+Las visitas se miden con [GoatCounter](https://www.goatcounter.com), sin cookies y solo en el sitio publicado (el script no se carga en desarrollo). Eventos: `personalizar-<grupo>-<opción>` (p. ej. `personalizar-estilo-<preset>`), `sonido-on` / `sonido-off`, `comprar-navbar` / `comprar-pedido`, y `github` / `portfolio` (enlaces del footer). Se declaran con atributos `data-goatcounter-click` en el HTML.
 
 ## Accesibilidad y compatibilidad
 
